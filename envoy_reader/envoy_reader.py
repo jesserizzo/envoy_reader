@@ -4,12 +4,12 @@ import json
 
 envoy_model = "S"
 def call_api(ip_address):
-    url = "http://envoy/production.json".format(ip_address)
-    response = requests.get(url, timeout=5)
+    url = "http://{}/production.json".format(ip_address)
+    response = requests.get(url, timeout=5, allow_redirects=False)
     if response.status_code == 301:
         global envoy_model
         envoy_model = "Original"
-        url = "http://envoy/api/v1/production"
+        url = "http://{}/api/v1/production".format(ip_address)
         response = requests.get(url, timeout=5)
         return response.json()
 
@@ -147,12 +147,12 @@ def lifetime_consumption(ip_address):
 
 
 if __name__ == "__main__":
-    url = ""
-    print("production {}".format(production(url)))
-    print("consumption {}".format(consumption(url)))
-    print("daily_production {}".format(daily_production(url)))
-    print("daily_consumption {}".format(daily_consumption(url)))
-    print("seven_days_production {}".format(seven_days_production(url)))
-    print("seven_days_consumption {}".format(seven_days_consumption(url)))
-    print("lifetime_production {}".format(lifetime_production(url)))
-    print("lifetime_consumption {}".format(lifetime_consumption(url)))
+    host = "envoy"
+    print("production {}".format(production(host)))
+    print("consumption {}".format(consumption(host)))
+    print("daily_production {}".format(daily_production(host)))
+    print("daily_consumption {}".format(daily_consumption(host)))
+    print("seven_days_production {}".format(seven_days_production(host)))
+    print("seven_days_consumption {}".format(seven_days_consumption(host)))
+    print("lifetime_production {}".format(lifetime_production(host)))
+    print("lifetime_consumption {}".format(lifetime_consumption(host)))

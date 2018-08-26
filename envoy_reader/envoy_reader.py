@@ -7,12 +7,18 @@ class EnvoyReader():
     def __init__(self, host, envoy_model):
         self.host = host.lower()
         self.envoy_model = envoy_model.lower()
+        # The Envoy IQ and the S supply the same json, so it's easier to
+        # just set them both to be the 's'
+        if self.envoy_model == "iq":
+            self.envoy_model = "s"
 
     def call_api(self):
         if self.envoy_model == "original":
             url = "http://{}/api/v1/production".format(self.host)
             response = requests.get(url, timeout=10)
         else:
+            # If it responds at this url we know it is the Envoy S
+            # If it gives us a 301 error then it is an original
             url = "http://{}/production.json".format(self.host)
             response = requests.get(url, timeout=10, allow_redirects=False)
             if response.status_code == 200:
@@ -160,7 +166,7 @@ if __name__ == "__main__":
     if host == "":
         host = "envoy"
     envoy_model = input("Enter the model of the Envoy " +
-                        "('Original' or 'S'), or press enter.")
+                        "('Original', 'S', or 'IQ'), or press enter.")
     if envoy_model == "":
         envoy_model = "unknown"
 

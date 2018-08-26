@@ -5,22 +5,22 @@ import json
 
 class EnvoyReader():
     def __init__(self, host, envoy_model):
-        self.host = host
-        self.envoy_model = envoy_model
+        self.host = host.lower()
+        self.envoy_model = envoy_model.lower()
 
     def call_api(self):
         if self.envoy_model == "original":
             url = "http://{}/api/v1/production".format(self.host)
-            response = requests.get(url, timeout=5)
+            response = requests.get(url, timeout=10)
         else:
             url = "http://{}/production.json".format(self.host)
-            response = requests.get(url, timeout=5, allow_redirects=False)
+            response = requests.get(url, timeout=10, allow_redirects=False)
             if response.status_code == 200:
                 self.envoy_model = "s"
             elif response.status_code == 301:
                 self.envoy_model = "original"
                 url = "http://{}/api/v1/production".format(self.host)
-                response = requests.get(url, timeout=5)
+                response = requests.get(url, timeout=10)
         return response.json()
 
     def production(self):

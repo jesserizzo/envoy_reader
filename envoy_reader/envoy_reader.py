@@ -39,8 +39,10 @@ class EnvoyReader():
 
     def consumption(self):
         try:
+            if self.envoy_model == "original":
+                return "Unavailable"
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model.lower() == "s":
+            if self.envoy_model == "s":
                 consumption = raw_json["consumption"][0]["wNow"]
                 return int(consumption)
             else:
@@ -54,7 +56,7 @@ class EnvoyReader():
     def daily_production(self):
         try:
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model.lower() == "s":
+            if self.envoy_model == "s":
                 daily_production = raw_json["production"][1]["whToday"]
             else:
                 daily_production = raw_json["wattHoursToday"]
@@ -67,8 +69,10 @@ class EnvoyReader():
 
     def daily_consumption(self):
         try:
+            if self.envoy_model == "original":
+                return "Unavailable"
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model.lower() == "s":
+            if self.envoy_model == "s":
                 daily_consumption = raw_json["consumption"][0]["whToday"]
                 return int(daily_consumption)
             else:
@@ -83,7 +87,7 @@ class EnvoyReader():
     def seven_days_production(self):
         try:
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model.lower() == "s":
+            if self.envoy_model == "s":
                 seven_days_production = raw_json["production"][1][
                     "whLastSevenDays"
                 ]
@@ -98,8 +102,10 @@ class EnvoyReader():
 
     def seven_days_consumption(self):
         try:
+            if self.envoy_model == "original":
+                return "Unavailable"
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model.lower() == "s":
+            if self.envoy_model == "s":
                 seven_days_consumption = raw_json["consumption"][0][
                     "whLastSevenDays"
                 ]
@@ -115,7 +121,7 @@ class EnvoyReader():
     def lifetime_production(self):
         try:
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model.lower() == "s":
+            if self.envoy_model == "s":
                 lifetime_production = raw_json["production"][1][
                     "whLifetime"
                 ]
@@ -130,8 +136,10 @@ class EnvoyReader():
 
     def lifetime_consumption(self):
         try:
+            if self.envoy_model == "original":
+                return "Unavailable"
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model.lower() == "s":
+            if self.envoy_model == "s":
                 lifetime_consumption = raw_json["consumption"][0][
                     "whLifetime"
                 ]

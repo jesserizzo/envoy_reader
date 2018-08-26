@@ -4,160 +4,152 @@ import json
 
 
 class EnvoyReader():
-    def __init__(self, host, envoy_model):
+    def __init__(self, host):
         self.host = host.lower()
-        self.envoy_model = envoy_model.lower()
-        # The Envoy IQ and the S supply the same json, so it's easier to
-        # just set them both to be the 's'
-        if self.envoy_model == "iq":
-            self.envoy_model = "s"
 
     def call_api(self):
-        if self.envoy_model == "original":
-            url = "http://{}/api/v1/production".format(self.host)
-            response = requests.get(url, timeout=10)
+        url = "http://{}/production.json".format(self.host)
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200 and len(response.json()) == 3:
+            return response.json()
         else:
-            # If it responds at this url we know it is the Envoy S
-            # If it gives us a 301 error then it is an original
-            url = "http://{}/production.json".format(self.host)
+            url = "http://{}/api/v1/production".format(self.host)
             response = requests.get(url, timeout=10, allow_redirects=False)
-            if response.status_code == 200:
-                self.envoy_model = "s"
-            elif response.status_code == 301:
-                self.envoy_model = "original"
-                url = "http://{}/api/v1/production".format(self.host)
-                response = requests.get(url, timeout=10)
-        return response.json()
+            return response.json()
 
     def production(self):
         try:
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model == "s":
+            try:
                 production = raw_json["production"][1]["wNow"]
-            else:
+            except (IndexError, KeyError):
                 production = raw_json["wattsNow"]
             return int(production)
+
         except requests.exceptions.ConnectionError:
             return "Unable to connect to Envoy. Check the IP address"
-        except (json.decoder.JSONDecodeError, KeyError):
+        except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
                     "Check the IP address")
 
     def consumption(self):
         try:
-            if self.envoy_model == "original":
-                return "Unavailable"
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model == "s":
+            try:
                 consumption = raw_json["consumption"][0]["wNow"]
-                return int(consumption)
-            else:
+            except (IndexError, KeyError):
                 return "Unavailable"
+            return int(consumption)
+
         except requests.exceptions.ConnectionError:
             return "Unable to connect to Envoy. Check the IP address"
-        except (json.decoder.JSONDecodeError, KeyError):
+        except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address")
+                    "Check the IP address, or maybe your model of Envoy " +
+                    "doesn't support this")
 
     def daily_production(self):
         try:
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model == "s":
+            try:
                 daily_production = raw_json["production"][1]["whToday"]
-            else:
+            except (KeyError, IndexError):
                 daily_production = raw_json["wattHoursToday"]
             return int(daily_production)
+
         except requests.exceptions.ConnectionError:
             return "Unable to connect to Envoy. Check the IP address"
-        except (json.decoder.JSONDecodeError, KeyError):
+        except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address")
+                    "Check the IP address, or maybe your model of Envoy " +
+                    "doesn't support this")
 
     def daily_consumption(self):
         try:
-            if self.envoy_model == "original":
-                return "Unavailable"
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model == "s":
+            try:
                 daily_consumption = raw_json["consumption"][0]["whToday"]
-                return int(daily_consumption)
-            else:
+            except (KeyError, IndexError):
                 return "Unavailable"
+            return int(daily_consumption)
 
         except requests.exceptions.ConnectionError:
             return "Unable to connect to Envoy. Check the IP address"
-        except (json.decoder.JSONDecodeError, KeyError):
+        except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address")
+                    "Check the IP address, or maybe your model of Envoy " +
+                    "doesn't support this")
 
     def seven_days_production(self):
         try:
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model == "s":
+            try:
                 seven_days_production = raw_json["production"][1][
                     "whLastSevenDays"
                 ]
-            else:
+            except (KeyError, IndexError):
                 seven_days_production = raw_json["wattHoursSevenDays"]
             return int(seven_days_production)
+
         except requests.exceptions.ConnectionError:
             return "Unable to connect to Envoy. Check the IP address"
-        except (json.decoder.JSONDecodeError, KeyError):
+        except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address")
+                    "Check the IP address, or maybe your model of Envoy " +
+                    "doesn't support this")
 
     def seven_days_consumption(self):
         try:
-            if self.envoy_model == "original":
-                return "Unavailable"
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model == "s":
+            try:
                 seven_days_consumption = raw_json["consumption"][0][
                     "whLastSevenDays"
                 ]
-                return int(seven_days_consumption)
-            else:
+            except (KeyError, IndexError):
                 return "Unavailable"
+            return int(seven_days_consumption)
+
         except requests.exceptions.ConnectionError:
             return "Unable to connect to Envoy. Check the IP address"
-        except (json.decoder.JSONDecodeError, KeyError):
+        except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address")
+                    "Check the IP address, or maybe your model of Envoy " +
+                    "doesn't support this")
 
     def lifetime_production(self):
         try:
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model == "s":
+            try:
                 lifetime_production = raw_json["production"][1][
                     "whLifetime"
                 ]
-            else:
+            except (KeyError, IndexError):
                 lifetime_production = raw_json["wattHoursLifetime"]
             return int(lifetime_production)
+
         except requests.exceptions.ConnectionError:
             return "Unable to connect to Envoy. Check the IP address"
-        except (json.decoder.JSONDecodeError, KeyError):
+        except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
                     "Check the IP address")
 
     def lifetime_consumption(self):
         try:
-            if self.envoy_model == "original":
-                return "Unavailable"
             raw_json = EnvoyReader.call_api(self)
-            if self.envoy_model == "s":
+            try:
                 lifetime_consumption = raw_json["consumption"][0][
                     "whLifetime"
                 ]
-                return int(lifetime_consumption)
-            else:
+            except (KeyError, IndexError):
                 return "Unavailable"
+            return int(lifetime_consumption)
 
         except requests.exceptions.ConnectionError:
             return "Unable to connect to Envoy. Check the IP address"
-        except (json.decoder.JSONDecodeError, KeyError):
+        except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address")
+                    "Check the IP address, or maybe your model of Envoy " +
+                    "doesn't support this")
 
 
 if __name__ == "__main__":
@@ -165,24 +157,16 @@ if __name__ == "__main__":
                  "or press enter to search for it.")
     if host == "":
         host = "envoy"
-    envoy_model = input("Enter the model of the Envoy " +
-                        "('Original', 'S', or 'IQ'), or press enter.")
-    if envoy_model == "":
-        envoy_model = "unknown"
 
-    print("production {}".format(EnvoyReader(host, envoy_model)
-                                 .production()))
-    print("consumption {}".format(EnvoyReader(host, envoy_model)
-                                  .consumption()))
-    print("daily_production {}".format(EnvoyReader(host, envoy_model)
-                                       .daily_production()))
-    print("daily_consumption {}".format(EnvoyReader(host, envoy_model)
-                                        .daily_consumption()))
-    print("seven_days_production {}".format(EnvoyReader(host, envoy_model)
+    print("production {}".format(EnvoyReader(host).production()))
+    print("consumption {}".format(EnvoyReader(host).consumption()))
+    print("daily_production {}".format(EnvoyReader(host).daily_production()))
+    print("daily_consumption {}".format(EnvoyReader(host).daily_consumption()))
+    print("seven_days_production {}".format(EnvoyReader(host)
                                             .seven_days_production()))
-    print("seven_days_consumption {}".format(EnvoyReader(host, envoy_model)
+    print("seven_days_consumption {}".format(EnvoyReader(host)
                                              .seven_days_consumption()))
-    print("lifetime_production {}".format(EnvoyReader(host, envoy_model)
+    print("lifetime_production {}".format(EnvoyReader(host)
                                           .lifetime_production()))
-    print("lifetime_consumption {}".format(EnvoyReader(host, envoy_model)
+    print("lifetime_consumption {}".format(EnvoyReader(host)
                                            .lifetime_consumption()))

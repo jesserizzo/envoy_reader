@@ -21,7 +21,7 @@ class EnvoyReader():
             response = requests.get(self.url, timeout=10, allow_redirects=False)
             if response.status_code == 200:
                 self.model = "C"
-
+    
     def call_api(self):
         # detection 
         if self.model == "":
@@ -30,8 +30,7 @@ class EnvoyReader():
         if self.model == "S" or self.model == "C":
             return EnvoyReader.call_api_get(self)
         else:
-            # TODO throw exception
-            return "Could not connect or determine Envoy model. Check the IP address '" + self.host + "'."
+            raise RuntimeError("Could not connect or determine Envoy model. Check the IP address '" + self.host + "'.")
 
     def call_api_get(self):
         response = requests.get(self.url, timeout=10, allow_redirects=False)

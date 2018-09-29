@@ -4,18 +4,38 @@ import json
 
 
 class EnvoyReader():
+    # C for Envoy model C - S for Envoy model S
+    model = ""
+    url = ""
+
     def __init__(self, host):
         self.host = host.lower()
 
-    def call_api(self):
-        url = "http://{}/production.json".format(self.host)
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200 and response.url == url and len(response.json()) == 3:
-            return response.json()
+    def detect_model(self):
+        self.url = "http://{}/production.json".format(self.host)
+        response = requests.get(self.url, timeout=10, allow_redirects=False)
+        if response.status_code == 200 and len(response.json()) == 3:
+            self.model = "S"
         else:
-            url = "http://{}/api/v1/production".format(self.host)
-            response = requests.get(url, timeout=10, allow_redirects=False)
-            return response.json()
+            self.url = "http://{}/api/v1/production".format(self.host)
+            response = requests.get(self.url, timeout=10, allow_redirects=False)
+            if response.status_code == 200:
+                self.model = "C"
+
+    def call_api(self):
+        # detection 
+        if self.model == "":
+            EnvoyReader.detect_model(self)
+
+        if self.model == "S" or self.model == "C":
+            return EnvoyReader.call_api_get(self)
+        else:
+            # TODO throw exception
+            return "Could not connect or determine Envoy model. Check the IP address '" + self.host + "'."
+
+    def call_api_get(self):
+        response = requests.get(self.url, timeout=10, allow_redirects=False)
+        return response.json()
 
     def production(self):
         try:

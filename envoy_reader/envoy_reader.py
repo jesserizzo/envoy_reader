@@ -173,8 +173,8 @@ class EnvoyReader():
 
 
 if __name__ == "__main__":
-    host = input("Enter the Envoy IP address, " +
-                 "or press enter to search for it: ")
+    host = input("Enter the Envoy IP address or host name, " +
+                 "or press enter to use 'envoy' as default: ")
     if host == "":
         host = "envoy"
 

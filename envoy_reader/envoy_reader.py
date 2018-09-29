@@ -10,7 +10,7 @@ class EnvoyReader():
     def call_api(self):
         url = "http://{}/production.json".format(self.host)
         response = requests.get(url, timeout=10)
-        if response.status_code == 200 and len(response.json()) == 3:
+        if response.status_code == 200 and response.url == url and len(response.json()) == 3:
             return response.json()
         else:
             url = "http://{}/api/v1/production".format(self.host)
@@ -154,7 +154,7 @@ class EnvoyReader():
 
 if __name__ == "__main__":
     host = input("Enter the Envoy IP address, " +
-                 "or press enter to search for it.")
+                 "or press enter to search for it: ")
     if host == "":
         host = "envoy"
 

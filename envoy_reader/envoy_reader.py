@@ -177,15 +177,16 @@ if __name__ == "__main__":
     if host == "":
         host = "envoy"
 
-    print("production {}".format(EnvoyReader(host).production()))
-    print("consumption {}".format(EnvoyReader(host).consumption()))
-    print("daily_production {}".format(EnvoyReader(host).daily_production()))
-    print("daily_consumption {}".format(EnvoyReader(host).daily_consumption()))
-    print("seven_days_production {}".format(EnvoyReader(host)
+    testreader = EnvoyReader(host)
+    print("production {}".format(testreader.production()))
+    print("consumption {}".format(testreader.consumption()))
+    print("daily_production {}".format(testreader.daily_production()))
+    print("daily_consumption {}".format(testreader.daily_consumption()))
+    print("seven_days_production {}".format(testreader
                                             .seven_days_production()))
-    print("seven_days_consumption {}".format(EnvoyReader(host)
+    print("seven_days_consumption {}".format(testreader
                                              .seven_days_consumption()))
-    print("lifetime_production {}".format(EnvoyReader(host)
+    print("lifetime_production {}".format(testreader
                                           .lifetime_production()))
-    print("lifetime_consumption {}".format(EnvoyReader(host)
+    print("lifetime_consumption {}".format(testreader
                                            .lifetime_consumption()))

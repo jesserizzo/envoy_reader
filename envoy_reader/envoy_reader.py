@@ -52,12 +52,12 @@ class EnvoyReader():
                     "Check the IP address '" + self.host + "'.")
 
     def consumption(self):
+        if self.model == "C":
+            return "Unavailable on model " + self.model
+
         try:
             raw_json = EnvoyReader.call_api(self)
-            try:
-                consumption = raw_json["consumption"][0]["wNow"]
-            except (IndexError, KeyError):
-                return "Unavailable"
+            consumption = raw_json["consumption"][0]["wNow"]
             return int(consumption)
 
         except requests.exceptions.ConnectionError:
@@ -84,12 +84,12 @@ class EnvoyReader():
                     "doesn't support this.")
 
     def daily_consumption(self):
+        if self.model == "C":
+            return "Unavailable on model " + self.model
+
         try:
             raw_json = EnvoyReader.call_api(self)
-            try:
-                daily_consumption = raw_json["consumption"][0]["whToday"]
-            except (KeyError, IndexError):
-                return "Unavailable"
+            daily_consumption = raw_json["consumption"][0]["whToday"]
             return int(daily_consumption)
 
         except requests.exceptions.ConnectionError:
@@ -118,14 +118,12 @@ class EnvoyReader():
                     "doesn't support this.")
 
     def seven_days_consumption(self):
+        if self.model == "C":
+            return "Unavailable on model " + self.model
+
         try:
             raw_json = EnvoyReader.call_api(self)
-            try:
-                seven_days_consumption = raw_json["consumption"][0][
-                    "whLastSevenDays"
-                ]
-            except (KeyError, IndexError):
-                return "Unavailable"
+            seven_days_consumption = raw_json["consumption"][0]["whLastSevenDays"]
             return int(seven_days_consumption)
 
         except requests.exceptions.ConnectionError:
@@ -139,9 +137,7 @@ class EnvoyReader():
         try:
             raw_json = EnvoyReader.call_api(self)
             try:
-                lifetime_production = raw_json["production"][1][
-                    "whLifetime"
-                ]
+                lifetime_production = raw_json["production"][1]["whLifetime"]
             except (KeyError, IndexError):
                 lifetime_production = raw_json["wattHoursLifetime"]
             return int(lifetime_production)
@@ -153,14 +149,12 @@ class EnvoyReader():
                     "Check the IP address '" + self.host + "'.")
 
     def lifetime_consumption(self):
+        if self.model == "C":
+            return "Unavailable on model " + self.model
+
         try:
             raw_json = EnvoyReader.call_api(self)
-            try:
-                lifetime_consumption = raw_json["consumption"][0][
-                    "whLifetime"
-                ]
-            except (KeyError, IndexError):
-                return "Unavailable"
+            lifetime_consumption = raw_json["consumption"][0]["whLifetime"]
             return int(lifetime_consumption)
 
         except requests.exceptions.ConnectionError:
@@ -178,15 +172,11 @@ if __name__ == "__main__":
         host = "envoy"
 
     testreader = EnvoyReader(host)
-    print("production {}".format(testreader.production()))
-    print("consumption {}".format(testreader.consumption()))
-    print("daily_production {}".format(testreader.daily_production()))
-    print("daily_consumption {}".format(testreader.daily_consumption()))
-    print("seven_days_production {}".format(testreader
-                                            .seven_days_production()))
-    print("seven_days_consumption {}".format(testreader
-                                             .seven_days_consumption()))
-    print("lifetime_production {}".format(testreader
-                                          .lifetime_production()))
-    print("lifetime_consumption {}".format(testreader
-                                           .lifetime_consumption()))
+    print("production:              {}".format(testreader.production()))
+    print("consumption:             {}".format(testreader.consumption()))
+    print("daily_production:        {}".format(testreader.daily_production()))
+    print("daily_consumption:       {}".format(testreader.daily_consumption()))
+    print("seven_days_production:   {}".format(testreader.seven_days_production()))
+    print("seven_days_consumption:  {}".format(testreader.seven_days_consumption()))
+    print("lifetime_production:     {}".format(testreader.lifetime_production()))
+    print("lifetime_consumption:    {}".format(testreader.lifetime_consumption()))

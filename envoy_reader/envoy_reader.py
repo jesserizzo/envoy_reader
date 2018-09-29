@@ -27,10 +27,10 @@ class EnvoyReader():
             return int(production)
 
         except requests.exceptions.ConnectionError:
-            return "Unable to connect to Envoy. Check the IP address"
+            return "Unable to connect to Envoy. Check the IP address '" + self.host + "'."
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address")
+                    "Check the IP address '" + self.host + "'.")
 
     def consumption(self):
         try:
@@ -42,11 +42,11 @@ class EnvoyReader():
             return int(consumption)
 
         except requests.exceptions.ConnectionError:
-            return "Unable to connect to Envoy. Check the IP address"
+            return "Unable to connect to Envoy. Check the IP address '" + self.host + "'."
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address, or maybe your model of Envoy " +
-                    "doesn't support this")
+                    "Check the IP address '" + self.host + "',  or maybe your model of Envoy " +
+                    "doesn't support this.")
 
     def daily_production(self):
         try:
@@ -58,11 +58,11 @@ class EnvoyReader():
             return int(daily_production)
 
         except requests.exceptions.ConnectionError:
-            return "Unable to connect to Envoy. Check the IP address"
+            return "Unable to connect to Envoy. Check the IP address '" + self.host + "'."
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address, or maybe your model of Envoy " +
-                    "doesn't support this")
+                    "Check the IP address '" + self.host + "',  or maybe your model of Envoy " +
+                    "doesn't support this.")
 
     def daily_consumption(self):
         try:
@@ -74,11 +74,11 @@ class EnvoyReader():
             return int(daily_consumption)
 
         except requests.exceptions.ConnectionError:
-            return "Unable to connect to Envoy. Check the IP address"
+            return "Unable to connect to Envoy. Check the IP address '" + self.host + "'."
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address, or maybe your model of Envoy " +
-                    "doesn't support this")
+                    "Check the IP address '" + self.host + "',  or maybe your model of Envoy " +
+                    "doesn't support this.")
 
     def seven_days_production(self):
         try:
@@ -92,11 +92,11 @@ class EnvoyReader():
             return int(seven_days_production)
 
         except requests.exceptions.ConnectionError:
-            return "Unable to connect to Envoy. Check the IP address"
+            return "Unable to connect to Envoy. Check the IP address '" + self.host + "'."
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address, or maybe your model of Envoy " +
-                    "doesn't support this")
+                    "Check the IP address '" + self.host + "',  or maybe your model of Envoy " +
+                    "doesn't support this.")
 
     def seven_days_consumption(self):
         try:
@@ -110,11 +110,11 @@ class EnvoyReader():
             return int(seven_days_consumption)
 
         except requests.exceptions.ConnectionError:
-            return "Unable to connect to Envoy. Check the IP address"
+            return "Unable to connect to Envoy. Check the IP address '" + self.host + "'."
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address, or maybe your model of Envoy " +
-                    "doesn't support this")
+                    "Check the IP address '" + self.host + "',  or maybe your model of Envoy " +
+                    "doesn't support this.")
 
     def lifetime_production(self):
         try:
@@ -128,10 +128,10 @@ class EnvoyReader():
             return int(lifetime_production)
 
         except requests.exceptions.ConnectionError:
-            return "Unable to connect to Envoy. Check the IP address"
+            return "Unable to connect to Envoy. Check the IP address '" + self.host + "'."
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address")
+                    "Check the IP address '" + self.host + "'.")
 
     def lifetime_consumption(self):
         try:
@@ -145,11 +145,11 @@ class EnvoyReader():
             return int(lifetime_consumption)
 
         except requests.exceptions.ConnectionError:
-            return "Unable to connect to Envoy. Check the IP address"
+            return "Unable to connect to Envoy. Check the IP address '" + self.host + "'."
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return ("Got a response, but it doesn't look right. " +
-                    "Check the IP address, or maybe your model of Envoy " +
-                    "doesn't support this")
+                    "Check the IP address '" + self.host + "',  or maybe your model of Envoy " +
+                    "doesn't support this.")
 
 
 if __name__ == "__main__":

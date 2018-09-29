@@ -4,7 +4,7 @@ import json
 
 
 class EnvoyReader():
-    # P for prooduction data only (ie. Envoy model C)
+    # P for production data only (ie. Envoy model C)
     # PC for production and consumption data (ie. Envoy model S)
     endpoint_type = ""
     endpoint_url = ""

@@ -16,13 +16,13 @@ class EnvoyReader():
 
     def detect_model(self):
         self.endpoint_url = "http://{}/production.json".format(self.host)
-        response = requests.get(self.endpoint_url, timeout=10, allow_redirects=False)
+        response = requests.get(self.endpoint_url, timeout=30, allow_redirects=False)
         if response.status_code == 200 and len(response.json()) == 3:
             self.endpoint_type = "PC"
             return
         else:
             self.endpoint_url = "http://{}/api/v1/production".format(self.host)
-            response = requests.get(self.endpoint_url, timeout=10, allow_redirects=False)
+            response = requests.get(self.endpoint_url, timeout=30, allow_redirects=False)
             if response.status_code == 200:
                 self.endpoint_type = "P"
                 return
@@ -37,13 +37,13 @@ class EnvoyReader():
         if self.endpoint_type == "":
             EnvoyReader.detect_model(self)
 
-        response = requests.get(self.endpoint_url, timeout=10, allow_redirects=False)
+        response = requests.get(self.endpoint_url, timeout=30, allow_redirects=False)
         return response.json()
 
-    def create_json_errormessage(self):
+    def create_connect_errormessage(self):
         return ("Unable to connect to Envoy. Check that the device is up at 'http://" + self.host + "'.")
 
-    def create_connect_errormessage(self):
+    def create_json_errormessage (self):
         return ("Got a response from '" + self.endpoint_url + "', but metric could not be found. " +
                 "Maybe your model of Envoy doesn't support the requested metric.")
 

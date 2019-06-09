@@ -181,7 +181,10 @@ class EnvoyReader():
         try:
             response = requests.get("http://{}/api/v1/production/inverters".format(self.host),
                                     auth=HTTPDigestAuth("envoy", self.serial_number_last_six))
-            return response.json()
+            response_dict = {}
+            for item in response.json():
+                response_dict[item["serialNumber"]] = item["lastReportWatts"]
+            return response_dict
         except requests.exceptions.ConnectionError:
             return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):

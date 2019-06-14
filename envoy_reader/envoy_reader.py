@@ -148,8 +148,7 @@ class EnvoyReader():
         try:
             raw_json = await self.call_api()
             if self.endpoint_type == "PC":
-                seven_days_production = raw_json["production"][1]
-                ["whLastSevenDays"]
+                seven_days_production = raw_json["production"][1]["whLastSevenDays"]
             else:
                 seven_days_production = raw_json["wattHoursSevenDays"]
             return int(seven_days_production)
@@ -167,8 +166,7 @@ class EnvoyReader():
 
         try:
             raw_json = await self.call_api()
-            seven_days_consumption = raw_json["consumption"][0]
-            ["whLastSevenDays"]
+            seven_days_consumption = raw_json["consumption"][0]["whLastSevenDays"]
             return int(seven_days_consumption)
 
         except requests.exceptions.ConnectionError:

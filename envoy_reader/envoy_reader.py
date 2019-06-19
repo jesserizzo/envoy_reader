@@ -33,7 +33,7 @@ class EnvoyReader():
             return
 
         self.endpoint_url = "http://{}/api/v1/production".format(self.host)
-        response = requests.get(
+        response = await requests.get(
             self.endpoint_url, timeout=30, allow_redirects=False)
         if response.status_code == 200:
             self.endpoint_type = "P"

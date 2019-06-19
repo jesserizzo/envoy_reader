@@ -50,8 +50,9 @@ class EnvoyReader():
             response = await requests.get(
                 "http://{}/info.xml".format(self.host),
                 timeout=10, allow_redirects=False)
-            sn = response.text.split("<sn>")[1].split("</sn>")[0][-6:]
-            self.serial_number_last_six = sn
+            if len(response.text) > 0:
+                sn = response.text.split("<sn>")[1].split("</sn>")[0][-6:]
+                self.serial_number_last_six = sn
         except requests.exceptions.ConnectionError:
             return self.create_connect_errormessage()
         # except

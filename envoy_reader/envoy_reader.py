@@ -214,8 +214,8 @@ class EnvoyReader():
             response = requests_sync.get(
                 "http://{}/api/v1/production/inverters"
                 .format(self.host),
-                auth=HTTPDigestAuth("installer",
-                                    "j53f34e9"))
+                auth=HTTPDigestAuth("envoy",
+                                    self.serial_number_last_six))
             response_dict = {}
             for item in response.json():
                 response_dict[item["serialNumber"]] = item["lastReportWatts"]

@@ -4,9 +4,9 @@ import asyncio
 import sys
 import json
 from requests.auth import HTTPDigestAuth
-import requests
-#import requests as requests_sync
-#import requests_async as requests
+#import requests
+import requests as requests_sync
+import requests_async as requests
 import re
 
 PRODUCTION_REGEX = \
@@ -33,25 +33,25 @@ class EnvoyReader():
         self.endpoint_url = ""
         self.serial_number_last_six = ""
 
-    def detect_model(self):
+    async def detect_model(self):
         """Method to determine if the Envoy supports consumption values or
          only production"""
         self.endpoint_url = "http://{}/production.json".format(self.host)
-        response = requests.get(
+        response = await requests.get(
             self.endpoint_url, timeout=30, allow_redirects=False)
         if response.status_code == 200 and len(response.json()) == 3:
             self.endpoint_type = "PC"       # Envoy-S with consumption
             return
         else:
             self.endpoint_url = "http://{}/api/v1/production".format(self.host)
-            response = requests.get(
+            response = await requests.get(
                 self.endpoint_url, timeout=30, allow_redirects=False)
             if response.status_code == 200:
                 self.endpoint_type = "P"       # Envoy-C, production only
                 return
             else:
                 self.endpoint_url = "http://{}/production".format(self.host)
-                response = requests.get(
+                response = await requests.get(
                     self.endpoint_url, timeout=30, allow_redirects=False)
                 if response.status_code == 200:
                     self.endpoint_type = "P0"       # older Envoy-C
@@ -77,13 +77,13 @@ class EnvoyReader():
         #         "Unable to find device serial number, " +
         #         "this is needed to read inverter production.")
 
-    def call_api(self):
+    async def call_api(self):
         """Method to call the Envoy API"""
         # detection of endpoint if not already known
         if self.endpoint_type == "":
-            self.detect_model()
+            await self.detect_model()
 
-        response = requests.get(
+        response = await requests.get(
             self.endpoint_url, timeout=30, allow_redirects=False)
         if self.endpoint_type == "P" or self.endpoint_type == "PC":
             return response.json()     # these Envoys have .json
@@ -103,22 +103,22 @@ class EnvoyReader():
                 "Maybe your model of Envoy doesn't " +
                 "support the requested metric.")
 
-    def production(self):
+    async def production(self):
         """Call API and parse production values from response"""
         if self.endpoint_type == "":
             EnvoyReader.detect_model(self)
 
         try:
             if self.endpoint_type == "PC":
-                raw_json = EnvoyReader.call_api(self)
+                raw_json = await self.call_api()
                 production = raw_json["production"][1]["wNow"]
             else:
                 if self.endpoint_type == "P":
-                    raw_json = EnvoyReader.call_api(self)
+                    raw_json = await self.call_api()
                     production = raw_json["wattsNow"]
                 else:
                     if self.endpoint_type == "P0":
-                        text = EnvoyReader.call_api(self)
+                        text = await self.call_api()
                         match = re.search(
                             PRODUCTION_REGEX, text, re.MULTILINE)
                         if match:
@@ -141,13 +141,13 @@ class EnvoyReader():
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return self.create_json_errormessage()
 
-    def consumption(self):
+    async def consumption(self):
         """Call API and parse consumption values from response"""
         if self.endpoint_type == "P" or self.endpoint_type == "P0":
             return self.message_consumption_not_available
 
         try:
-            raw_json = EnvoyReader.call_api(self)
+            raw_json = await self.call_api()
             consumption = raw_json["consumption"][0]["wNow"]
             return int(consumption)
 
@@ -156,22 +156,22 @@ class EnvoyReader():
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return self.create_json_errormessage()
 
-    def daily_production(self):
+    async def daily_production(self):
         """Call API and parse todays production values from response"""
         if self.endpoint_type == "":
             self.detect_model()
 
         try:
             if self.endpoint_type == "PC":
-                raw_json = self.call_api()
+                raw_json = await self.call_api()
                 daily_production = raw_json["production"][1]["whToday"]
             else:
                 if self.endpoint_type == "P":
-                    raw_json = self.call_api()
+                    raw_json = await self.call_api()
                     daily_production = raw_json["wattHoursToday"]
                 else:
                     if self.endpoint_type == "P0":
-                        text = self.call_api()
+                        text = await self.call_api()
                         match = re.search(
                             DAY_PRODUCTION_REGEX, text, re.MULTILINE)
                         if match:
@@ -197,13 +197,13 @@ class EnvoyReader():
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return self.create_json_errormessage()
 
-    def daily_consumption(self):
+    async def daily_consumption(self):
         """Call API and parse todays consumption values from response"""
         if self.endpoint_type == "P" or self.endpoint_type == "P0":
             return self.message_consumption_not_available
 
         try:
-            raw_json = self.call_api()
+            raw_json = await self.call_api()
             daily_consumption = raw_json["consumption"][0]["whToday"]
             return int(daily_consumption)
 
@@ -212,7 +212,7 @@ class EnvoyReader():
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return self.create_json_errormessage()
 
-    def seven_days_production(self):
+    async def seven_days_production(self):
         """Call API and parse the past seven days production values from the
          response"""
         if self.endpoint_type == "":
@@ -220,15 +220,15 @@ class EnvoyReader():
 
         try:
             if self.endpoint_type == "PC":
-                raw_json = self.call_api()
+                raw_json = await self.call_api()
                 seven_days_production = raw_json["production"][1]["whLastSevenDays"]
             else:
                 if self.endpoint_type == "P":
-                    raw_json = self.call_api()
+                    raw_json = await self.call_api()
                     seven_days_production = raw_json["wattHoursSevenDays"]
                 else:
                     if self.endpoint_type == "P0":
-                        text = self.call_api()
+                        text = await self.call_api()
                         match = re.search(
                             WEEK_PRODUCTION_REGEX, text, re.MULTILINE)
                         if match:
@@ -252,14 +252,14 @@ class EnvoyReader():
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return self.create_json_errormessage()
 
-    def seven_days_consumption(self):
+    async def seven_days_consumption(self):
         """Call API and parse the past seven days consumption values from
          the response"""
         if self.endpoint_type == "P" or self.endpoint_type == "P0":
             return self.message_consumption_not_available
 
         try:
-            raw_json = self.call_api()
+            raw_json = await self.call_api()
             seven_days_consumption = raw_json["consumption"][0]["whLastSevenDays"]
             return int(seven_days_consumption)
 
@@ -268,22 +268,22 @@ class EnvoyReader():
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return self.create_json_errormessage()
 
-    def lifetime_production(self):
+    async def lifetime_production(self):
         """Call API and parse the lifetime of production from response"""
         if self.endpoint_type == "":
             self.detect_model()
 
         try:
             if self.endpoint_type == "PC":
-                raw_json = self.call_api()
+                raw_json = await self.call_api()
                 lifetime_production = raw_json["production"][1]["whLifetime"]
             else:
                 if self.endpoint_type == "P":
-                    raw_json = self.call_api()
+                    raw_json = await self.call_api()
                     lifetime_production = raw_json["wattHoursLifetime"]
                 else:
                     if self.endpoint_type == "P0":
-                        text = self.call_api()
+                        text = await self.call_api()
                         match = re.search(
                             LIFE_PRODUCTION_REGEX, text, re.MULTILINE)
                         if match:
@@ -308,12 +308,11 @@ class EnvoyReader():
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return self.create_json_errormessage()
 
-    def inverters_production(self):
+    async def inverters_production(self):
         """Hit a different Envoy endpoint and get the production values for
          individual inverters"""
         if self.serial_number_last_six == "":
-#            await self.get_serial_number()
-            self.get_serial_number()
+            await self.get_serial_number()
         try:
             response = requests_sync.get(
                 "http://{}/api/v1/production/inverters"

@@ -4,7 +4,6 @@ import asyncio
 import sys
 import json
 from requests.auth import HTTPDigestAuth
-#import requests
 import requests as requests_sync
 import requests_async as requests
 import re
@@ -308,6 +307,21 @@ class EnvoyReader():
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return self.create_json_errormessage()
 
+    async def lifetime_consumption(self):
+        """Call API and parse the lifetime of consumption from response"""
+        if self.endpoint_type == "P" or self.endpoint_type == "P0":
+            return self.message_consumption_not_available
+
+        try:
+            raw_json = await self.call_api()
+            lifetime_consumption = raw_json["consumption"][0]["whLifetime"]
+            return int(lifetime_consumption)
+
+        except requests.exceptions.ConnectionError:
+            return self.create_connect_errormessage()
+        except (json.decoder.JSONDecodeError, KeyError, IndexError):
+            return self.create_json_errormessage()
+
     async def inverters_production(self):
         """Hit a different Envoy endpoint and get the production values for
          individual inverters"""
@@ -326,21 +340,6 @@ class EnvoyReader():
         except requests.exceptions.ConnectionError:
             return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError, TypeError):
-            return self.create_json_errormessage()
-
-    def lifetime_consumption(self):
-        """Call API and parse the lifetime of consumption from response"""
-        if self.endpoint_type == "P" or self.endpoint_type == "P0":
-            return self.message_consumption_not_available
-
-        try:
-            raw_json = EnvoyReader.call_api(self)
-            lifetime_consumption = raw_json["consumption"][0]["whLifetime"]
-            return int(lifetime_consumption)
-
-        except requests.exceptions.ConnectionError:
-            return self.create_connect_errormessage()
-        except (json.decoder.JSONDecodeError, KeyError, IndexError):
             return self.create_json_errormessage()
 
     def run_in_console(self):
@@ -368,7 +367,6 @@ class EnvoyReader():
         print("lifetime_production:     {}".format(results[6]))
         print("lifetime_consumption:    {}".format(results[7]))
         print("inverters_production:   {}".format(results[8]))
-
 
 
 if __name__ == "__main__":

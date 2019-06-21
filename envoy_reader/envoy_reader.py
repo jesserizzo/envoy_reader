@@ -59,8 +59,8 @@ class EnvoyReader():
 
         self.endpoint_url = ""
         raise RuntimeError(
-                "Could not connect or determine Envoy model. " +
-                "Check that the device is up at 'http://" + self.host + "'.")
+            "Could not connect or determine Envoy model. " +
+            "Check that the device is up at 'http://" + self.host + "'.")
 
     async def get_serial_number(self):
         """Method to get last six digits of Envoy serial number for auth"""
@@ -93,12 +93,12 @@ class EnvoyReader():
     def create_connect_errormessage(self):
         """Create error message if unable to connect to Envoy"""
         return ("Unable to connect to Envoy. " +
-                "Check that the device is up at 'http://" 
+                "Check that the device is up at 'http://"
                 + self.host + "'.")
 
     def create_json_errormessage(self):
         """Create error message if unable to parse JSON response"""
-        return ("Got a response from '" + self.endpoint_url + 
+        return ("Got a response from '" + self.endpoint_url +
                 "', but metric could not be found. " +
                 "Maybe your model of Envoy doesn't " +
                 "support the requested metric.")
@@ -137,9 +137,9 @@ class EnvoyReader():
             return int(production)
 
         except requests.exceptions.ConnectionError:
-            return EnvoyReader.create_connect_errormessage(self)
+            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return EnvoyReader.create_json_errormessage(self)
+            return self.create_json_errormessage()
 
     def consumption(self):
         """Call API and parse consumption values from response"""
@@ -152,26 +152,26 @@ class EnvoyReader():
             return int(consumption)
 
         except requests.exceptions.ConnectionError:
-            return EnvoyReader.create_connect_errormessage(self)
+            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return EnvoyReader.create_json_errormessage(self)
+            return self.create_json_errormessage()
 
     def daily_production(self):
         """Call API and parse todays production values from response"""
         if self.endpoint_type == "":
-            EnvoyReader.detect_model(self)
+            self.detect_model()
 
         try:
             if self.endpoint_type == "PC":
-                raw_json = EnvoyReader.call_api(self)
+                raw_json = self.call_api()
                 daily_production = raw_json["production"][1]["whToday"]
             else:
                 if self.endpoint_type == "P":
-                    raw_json = EnvoyReader.call_api(self)
+                    raw_json = self.call_api()
                     daily_production = raw_json["wattHoursToday"]
                 else:
                     if self.endpoint_type == "P0":
-                        text = EnvoyReader.call_api(self)
+                        text = self.call_api()
                         match = re.search(
                             DAY_PRODUCTION_REGEX, text, re.MULTILINE)
                         if match:
@@ -193,9 +193,9 @@ class EnvoyReader():
             return int(daily_production)
 
         except requests.exceptions.ConnectionError:
-            return EnvoyReader.create_connect_errormessage(self)
+            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return EnvoyReader.create_json_errormessage(self)
+            return self.create_json_errormessage()
 
     def daily_consumption(self):
         """Call API and parse todays consumption values from response"""
@@ -203,32 +203,32 @@ class EnvoyReader():
             return self.message_consumption_not_available
 
         try:
-            raw_json = EnvoyReader.call_api(self)
+            raw_json = self.call_api()
             daily_consumption = raw_json["consumption"][0]["whToday"]
             return int(daily_consumption)
 
         except requests.exceptions.ConnectionError:
-            return EnvoyReader.create_connect_errormessage(self)
+            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return EnvoyReader.create_json_errormessage(self)
+            return self.create_json_errormessage()
 
     def seven_days_production(self):
         """Call API and parse the past seven days production values from the
          response"""
         if self.endpoint_type == "":
-            EnvoyReader.detect_model(self)
+            self.detect_model()
 
         try:
             if self.endpoint_type == "PC":
-                raw_json = EnvoyReader.call_api(self)
+                raw_json = self.call_api()
                 seven_days_production = raw_json["production"][1]["whLastSevenDays"]
             else:
                 if self.endpoint_type == "P":
-                    raw_json = EnvoyReader.call_api(self)
+                    raw_json = self.call_api()
                     seven_days_production = raw_json["wattHoursSevenDays"]
                 else:
                     if self.endpoint_type == "P0":
-                        text = EnvoyReader.call_api(self)
+                        text = self.call_api()
                         match = re.search(
                             WEEK_PRODUCTION_REGEX, text, re.MULTILINE)
                         if match:
@@ -248,9 +248,9 @@ class EnvoyReader():
             return int(seven_days_production)
 
         except requests.exceptions.ConnectionError:
-            return EnvoyReader.create_connect_errormessage(self)
+            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return EnvoyReader.create_json_errormessage(self)
+            return self.create_json_errormessage()
 
     def seven_days_consumption(self):
         """Call API and parse the past seven days consumption values from
@@ -259,31 +259,31 @@ class EnvoyReader():
             return self.message_consumption_not_available
 
         try:
-            raw_json = EnvoyReader.call_api(self)
+            raw_json = self.call_api()
             seven_days_consumption = raw_json["consumption"][0]["whLastSevenDays"]
             return int(seven_days_consumption)
 
         except requests.exceptions.ConnectionError:
-            return EnvoyReader.create_connect_errormessage(self)
+            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return EnvoyReader.create_json_errormessage(self)
+            return self.create_json_errormessage()
 
     def lifetime_production(self):
         """Call API and parse the lifetime of production from response"""
         if self.endpoint_type == "":
-            EnvoyReader.detect_model(self)
+            self.detect_model()
 
         try:
             if self.endpoint_type == "PC":
-                raw_json = EnvoyReader.call_api(self)
+                raw_json = self.call_api()
                 lifetime_production = raw_json["production"][1]["whLifetime"]
             else:
                 if self.endpoint_type == "P":
-                    raw_json = EnvoyReader.call_api(self)
+                    raw_json = self.call_api()
                     lifetime_production = raw_json["wattHoursLifetime"]
                 else:
                     if self.endpoint_type == "P0":
-                        text = EnvoyReader.call_api(self)
+                        text = self.call_api()
                         match = re.search(
                             LIFE_PRODUCTION_REGEX, text, re.MULTILINE)
                         if match:
@@ -304,9 +304,9 @@ class EnvoyReader():
             return int(lifetime_production)
 
         except requests.exceptions.ConnectionError:
-            return EnvoyReader.create_connect_errormessage(self)
+            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return EnvoyReader.create_json_errormessage(self)
+            return self.create_json_errormessage()
 
     def inverters_production(self):
         """Hit a different Envoy endpoint and get the production values for
@@ -340,9 +340,9 @@ class EnvoyReader():
             return int(lifetime_consumption)
 
         except requests.exceptions.ConnectionError:
-            return EnvoyReader.create_connect_errormessage(self)
+            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return EnvoyReader.create_json_errormessage(self)
+            return self.create_json_errormessage()
 
     def run_in_console(self):
         """If running this module directly, print all the values in the

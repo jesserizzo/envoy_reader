@@ -38,8 +38,8 @@ class EnvoyReader():
         self.endpoint_url = "http://{}/production.json".format(self.host)
         response = await requests.get(
             self.endpoint_url, timeout=30, allow_redirects=False)
-        if response.status_code == 200 and len(response.json()) == 3:
-            self.endpoint_type = "PC"       # Envoy-S with consumption
+        if response.status_code == 200 and len(response.json()) >= 2:
+            self.endpoint_type = "PC"
             return
         else:
             self.endpoint_url = "http://{}/api/v1/production".format(self.host)

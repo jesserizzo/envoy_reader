@@ -4,6 +4,7 @@ Also reads production from individual inverters if supported.
 Tested on the original Envoy (production data only) and the Envoy S (production and consumption data).
 
 This reader uses a JSON endpoint on the Envoy gateway:
-
-- Original Envoy: http://envoy/api/v1/production
+- Original Envoy: http://envoy/api/v1/production    (available on software level R3.9 and later)
 - Envoy S: http://envoy/production.json
+
+For older Envoy with software before R3.9, data is collected from html at http://envoy/production

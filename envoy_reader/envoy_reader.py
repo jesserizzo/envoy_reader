@@ -106,7 +106,7 @@ class EnvoyReader():
     async def production(self):
         """Call API and parse production values from response"""
         if self.endpoint_type == "":
-            EnvoyReader.detect_model(self)
+            await self.detect_model()
 
         try:
             if self.endpoint_type == "PC":
@@ -159,7 +159,7 @@ class EnvoyReader():
     async def daily_production(self):
         """Call API and parse todays production values from response"""
         if self.endpoint_type == "":
-            self.detect_model()
+            await self.detect_model()
 
         try:
             if self.endpoint_type == "PC":
@@ -216,7 +216,7 @@ class EnvoyReader():
         """Call API and parse the past seven days production values from the
          response"""
         if self.endpoint_type == "":
-            self.detect_model()
+            await self.detect_model()
 
         try:
             if self.endpoint_type == "PC":
@@ -271,7 +271,7 @@ class EnvoyReader():
     async def lifetime_production(self):
         """Call API and parse the lifetime of production from response"""
         if self.endpoint_type == "":
-            self.detect_model()
+            await self.detect_model()
 
         try:
             if self.endpoint_type == "PC":

@@ -26,8 +26,10 @@ class EnvoyReader():
     message_consumption_not_available = ("Consumption data not available for "
                                          "your Envoy device.")
 
-    def __init__(self, host):
+    def __init__(self, host, username="envoy", password=""):
         self.host = host.lower()
+        self.username = username
+        self.password = password
         self.endpoint_type = ""
         self.endpoint_url = ""
         self.serial_number_last_six = ""
@@ -326,14 +328,23 @@ class EnvoyReader():
     async def inverters_production(self):
         """Hit a different Envoy endpoint and get the production values for
          individual inverters"""
-        if self.serial_number_last_six == "":
-            await self.get_serial_number()
+         
+        """If a password was not given as an argument when instantiating
+        the EnvoyReader object than use the last six numbers of the serial
+        number as the password.  Otherwise use the password argument value."""
+        if self.password == "":
+            if self.serial_number_last_six == "":
+                await self.get_serial_number()
+                self.password = self.serial_number_last_six
+        else:
+            self.serial_number_last_six = self.password
+            
         try:
             response = requests_sync.get(
                 "http://{}/api/v1/production/inverters"
                 .format(self.host),
-                auth=HTTPDigestAuth("envoy",
-                                    self.serial_number_last_six))
+                auth=HTTPDigestAuth(self.username,
+                                    self.password))
             response_dict = {}
             for item in response.json():
                 response_dict[item["serialNumber"]] = item["lastReportWatts"]

@@ -1,5 +1,3 @@
-"""Module to read production and consumption values from an Enphase Envoy on
- the local network"""
 import asyncio
 import sys
 import json
@@ -7,6 +5,9 @@ from requests.auth import HTTPDigestAuth
 import requests as requests_sync
 import requests_async as requests
 import re
+
+"""Module to read production and consumption values from an Enphase Envoy on
+ the local network"""
 
 PRODUCTION_REGEX = \
     r'<td>Currentl.*</td>\s+<td>\s*(\d+|\d+\.\d+)\s*(W|kW|MW)</td>'

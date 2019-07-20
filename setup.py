@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="envoy_reader",
-    version="0.8.3",
+    version="0.8.6",
     author="Jesse Rizzo",
     author_email="jesse.rizzo@gmail.com",
     description="A program to read from an Enphase Envoy on the local network",
@@ -14,9 +14,8 @@ setuptools.setup(
     url="https://github.com/jesserizzo/envoy_reader",
     packages=setuptools.find_packages(),
     install_requires=[
-        "asyncio == 3.4.3",
-        "requests == 2.22.0",
-        "requests_async == 0.6.2"
+        "requests >= 2.22.0",
+        "requests_async >= 0.6.0"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

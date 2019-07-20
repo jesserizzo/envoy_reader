@@ -18,6 +18,7 @@ WEEK_PRODUCTION_REGEX = \
 LIFE_PRODUCTION_REGEX = \
     r'<td>Since Installation</td>\s+<td>\s*(\d+|\d+\.\d+)\s*(Wh|kWh|MWh)</td>'
 
+
 class EnvoyReader():
     """Instance of EnvoyReader"""
     # P0 for older Envoy model C, s/w < R3.9 no json pages
@@ -67,7 +68,7 @@ class EnvoyReader():
         try:
             response = await requests.get(
                 "http://{}/info.xml".format(self.host),
-                timeout=10, allow_redirects=False)
+                timeout=30, allow_redirects=False)
             if len(response.text) > 0:
                 sn = response.text.split("<sn>")[1].split("</sn>")[0][-6:]
                 self.serial_number_last_six = sn
@@ -134,7 +135,7 @@ class EnvoyReader():
                         else:
                             raise RuntimeError(
                                 "No match for production, check REGEX  "
-                                +  text)
+                                + text)
             return int(production)
 
         except requests.exceptions.ConnectionError:
@@ -245,7 +246,7 @@ class EnvoyReader():
                                         match.group(1))
                         else:
                             raise RuntimeError("No match for 7 Day production, "
-                                "check REGEX " +  text)
+                                               "check REGEX " + text)
             return int(seven_days_production)
 
         except requests.exceptions.ConnectionError:
@@ -301,7 +302,7 @@ class EnvoyReader():
                         else:
                             raise RuntimeError(
                                 "No match for Lifetime production, "
-                                "check REGEX " +  text)
+                                "check REGEX " + text)
             return int(lifetime_production)
 
         except requests.exceptions.ConnectionError:

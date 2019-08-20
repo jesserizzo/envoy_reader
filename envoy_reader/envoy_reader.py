@@ -1,8 +1,9 @@
 """Module to read production and consumption values from an Enphase Envoy on
  the local network"""
 import asyncio
-import sys
 import json
+import time
+
 from requests.auth import HTTPDigestAuth
 import requests as requests_sync
 import requests_async as requests
@@ -336,9 +337,7 @@ class EnvoyReader():
             if self.serial_number_last_six == "":
                 await self.get_serial_number()
                 self.password = self.serial_number_last_six
-        else:
-            self.serial_number_last_six = self.password
-            
+
         try:
             response = requests_sync.get(
                 "http://{}/api/v1/production/inverters"
@@ -347,7 +346,8 @@ class EnvoyReader():
                                     self.password))
             response_dict = {}
             for item in response.json():
-                response_dict[item["serialNumber"]] = item["lastReportWatts"]
+                response_dict[item["serialNumber"]] = [item["lastReportWatts"],
+                                                       time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(item["lastReportDate"]))]
             return response_dict
         except requests.exceptions.ConnectionError:
             return self.create_connect_errormessage()
@@ -384,8 +384,22 @@ class EnvoyReader():
 if __name__ == "__main__":
     HOST = input("Enter the Envoy IP address or host name, " +
                  "or press enter to use 'envoy' as default: ")
+
+    USERNAME = input("Enter the Username for Inverter data authentication, " +
+                     "or press enter to use 'envoy' as default: ")
+
+    PASSWORD = input("Enter the Password for Inverter data authentication, " +
+                     "or press enter to use the default password: ")
+
     if HOST == "":
         HOST = "envoy"
 
-    TESTREADER = EnvoyReader(HOST)
+    if USERNAME == "":
+        USERNAME = "envoy"
+
+    if PASSWORD == "":
+        TESTREADER = EnvoyReader(HOST, USERNAME)
+    else:
+        TESTREADER = EnvoyReader(HOST, USERNAME, PASSWORD)
+
     TESTREADER.run_in_console()

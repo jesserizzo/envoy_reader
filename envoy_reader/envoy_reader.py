@@ -145,6 +145,8 @@ class EnvoyReader():
 
     async def consumption(self):
         """Call API and parse consumption values from response"""
+        if self.endpoint_type == "":
+            await self.detect_model()
         if self.endpoint_type == "P" or self.endpoint_type == "P0":
             return self.message_consumption_not_available
 
@@ -201,6 +203,8 @@ class EnvoyReader():
 
     async def daily_consumption(self):
         """Call API and parse todays consumption values from response"""
+        if self.endpoint_type == "":
+            await self.detect_model()
         if self.endpoint_type == "P" or self.endpoint_type == "P0":
             return self.message_consumption_not_available
 
@@ -257,6 +261,8 @@ class EnvoyReader():
     async def seven_days_consumption(self):
         """Call API and parse the past seven days consumption values from
          the response"""
+        if self.endpoint_type == "":
+            await self.detect_model()
         if self.endpoint_type == "P" or self.endpoint_type == "P0":
             return self.message_consumption_not_available
 
@@ -312,6 +318,8 @@ class EnvoyReader():
 
     async def lifetime_consumption(self):
         """Call API and parse the lifetime of consumption from response"""
+        if self.endpoint_type == "":
+            await self.detect_model()
         if self.endpoint_type == "P" or self.endpoint_type == "P0":
             return self.message_consumption_not_available
 

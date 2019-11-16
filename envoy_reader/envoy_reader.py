@@ -1,6 +1,7 @@
 import asyncio
-import sys
 import json
+import time
+
 from requests.auth import HTTPDigestAuth
 import requests as requests_sync
 import requests_async as requests
@@ -28,8 +29,10 @@ class EnvoyReader():
     message_consumption_not_available = ("Consumption data not available for "
                                          "your Envoy device.")
 
-    def __init__(self, host):
+    def __init__(self, host, username="envoy", password=""):
         self.host = host.lower()
+        self.username = username
+        self.password = password
         self.endpoint_type = ""
         self.endpoint_url = ""
         self.serial_number_last_six = ""
@@ -328,17 +331,25 @@ class EnvoyReader():
     async def inverters_production(self):
         """Hit a different Envoy endpoint and get the production values for
          individual inverters"""
-        if self.serial_number_last_six == "":
-            await self.get_serial_number()
+         
+        """If a password was not given as an argument when instantiating
+        the EnvoyReader object than use the last six numbers of the serial
+        number as the password.  Otherwise use the password argument value."""
+        if self.password == "":
+            if self.serial_number_last_six == "":
+                await self.get_serial_number()
+                self.password = self.serial_number_last_six
+
         try:
             response = requests_sync.get(
                 "http://{}/api/v1/production/inverters"
                 .format(self.host),
-                auth=HTTPDigestAuth("envoy",
-                                    self.serial_number_last_six))
+                auth=HTTPDigestAuth(self.username,
+                                    self.password))
             response_dict = {}
             for item in response.json():
-                response_dict[item["serialNumber"]] = item["lastReportWatts"]
+                response_dict[item["serialNumber"]] = [item["lastReportWatts"],
+                                                       time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(item["lastReportDate"]))]
             return response_dict
         except requests.exceptions.ConnectionError:
             return self.create_connect_errormessage()
@@ -375,8 +386,22 @@ class EnvoyReader():
 if __name__ == "__main__":
     HOST = input("Enter the Envoy IP address or host name, " +
                  "or press enter to use 'envoy' as default: ")
+
+    USERNAME = input("Enter the Username for Inverter data authentication, " +
+                     "or press enter to use 'envoy' as default: ")
+
+    PASSWORD = input("Enter the Password for Inverter data authentication, " +
+                     "or press enter to use the default password: ")
+
     if HOST == "":
         HOST = "envoy"
 
-    TESTREADER = EnvoyReader(HOST)
+    if USERNAME == "":
+        USERNAME = "envoy"
+
+    if PASSWORD == "":
+        TESTREADER = EnvoyReader(HOST, USERNAME)
+    else:
+        TESTREADER = EnvoyReader(HOST, USERNAME, PASSWORD)
+
     TESTREADER.run_in_console()

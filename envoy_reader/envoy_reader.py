@@ -354,11 +354,14 @@ class EnvoyReader():
                 .format(self.host),
                 auth=HTTPDigestAuth(self.username,
                                     self.password))
-            response_dict = {}
-            for item in response.json():
-                response_dict[item["serialNumber"]] = [item["lastReportWatts"],
-                                                       time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(item["lastReportDate"]))]
-            return response_dict
+            if response is not None and response.status_code != 401:                                    
+                response_dict = {}
+                for item in response.json():
+                    response_dict[item["serialNumber"]] = [item["lastReportWatts"],
+                                                        time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(item["lastReportDate"]))]
+                return response_dict
+            else:
+                raise Exception(f'Authentication failed for Enphase Envoy: {self.host}')
         except requests.exceptions.ConnectionError:
             return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError, TypeError):

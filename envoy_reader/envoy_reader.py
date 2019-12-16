@@ -361,7 +361,7 @@ class EnvoyReader():
                                                         time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(item["lastReportDate"]))]
                 return response_dict
             else:
-                raise Exception(f'Authentication failed for Enphase Envoy: {self.host}')
+                response.raise_for_status()
         except requests.exceptions.ConnectionError:
             return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError, TypeError):

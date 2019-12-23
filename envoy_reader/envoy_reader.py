@@ -116,7 +116,10 @@ class EnvoyReader():
         try:
             if self.endpoint_type == "PC":
                 raw_json = await self.call_api()
-                production = raw_json["production"][0]["wNow"]
+                try:
+                    production = raw_json["production"][1]["wNow"]
+                except IndexError:
+                    production = raw_json["production"][0]["wNow"]
             else:
                 if self.endpoint_type == "P":
                     raw_json = await self.call_api()

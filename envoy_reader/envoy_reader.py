@@ -37,13 +37,17 @@ class EnvoyReader():
         self.endpoint_url = ""
         self.serial_number_last_six = ""
 
+    def hasProductionAndConsumption(self, json):
+        """Check if json has keys for both production and consumption"""
+        return "production" in json and "consumption" in json
+
     async def detect_model(self):
         """Method to determine if the Envoy supports consumption values or
          only production"""
         self.endpoint_url = "http://{}/production.json".format(self.host)
         response = await requests.get(
             self.endpoint_url, timeout=30, allow_redirects=False)
-        if response.status_code == 200 and len(response.json()) >= 2:
+        if response.status_code == 200 and self.hasProductionAndConsumption(response.json()):
             self.endpoint_type = "PC"
             return
         else:

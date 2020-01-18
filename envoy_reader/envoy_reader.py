@@ -36,7 +36,6 @@ class EnvoyReader():
         self.endpoint_type = ""
         self.endpoint_url = ""
         self.serial_number_last_six = ""
-        print(asdf)
 
     def hasProductionAndConsumption(self, json):
         """Check if json has keys for both production and consumption"""

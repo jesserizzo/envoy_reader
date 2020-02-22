@@ -374,6 +374,31 @@ class EnvoyReader():
         except (json.decoder.JSONDecodeError, KeyError, IndexError, TypeError):
             return self.create_json_errormessage()
 
+    async def update(self):
+        """
+        Single entry point for Home Assistant
+        """
+        data = {}
+
+        tasks = [
+            self.production(),
+            self.consumption(),
+            self.daily_production(),
+            self.daily_consumption(),
+            self.seven_days_production(),
+            self.seven_days_consumption(),
+            self.lifetime_production(),
+            self.lifetime_consumption(),
+            self.inverters_production()
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for key, result in zip(tasks, results):
+            key = key.__name__
+            data[key] = result
+
+        return data
+
     def run_in_console(self):
         """If running this module directly, print all the values in the
          console."""

@@ -23,8 +23,8 @@ LIFE_PRODUCTION_REGEX = \
 class EnvoyReader():
     """Instance of EnvoyReader"""
     # P0 for older Envoy model C, s/w < R3.9 no json pages
-    # P for production data only (ie. Envoy model C, s/w >= R3.9)
-    # PC for production and consumption data (ie. Envoy model S)
+    # P1 for production data only (ie. Envoy model C or S, s/w >= R3.9)
+    # PC for production and consumption data (ie. Envoy model S Metered)
 
     message_consumption_not_available = ("Consumption data not available for "
                                          "your Envoy device.")
@@ -37,25 +37,23 @@ class EnvoyReader():
         self.endpoint_url = ""
         self.serial_number_last_six = ""
 
-    def hasProductionAndConsumption(self, json):
-        """Check if json has keys for both production and consumption"""
-        return "production" in json and "consumption" in json
-
+ 
     async def detect_model(self):
         """Method to determine if the Envoy supports consumption values or
          only production"""
         self.endpoint_url = "http://{}/production.json".format(self.host)
         response = await requests.get(
             self.endpoint_url, timeout=30, allow_redirects=False)
-        if response.status_code == 200 and self.hasProductionAndConsumption(response.json()):
-            self.endpoint_type = "PC"
+
+        if response.status_code == 200 and "consumption" in response.json():
+            self.endpoint_type = "PC"  # Envoy-S Metered, Production and consuption
             return
         else:
             self.endpoint_url = "http://{}/api/v1/production".format(self.host)
             response = await requests.get(
                 self.endpoint_url, timeout=30, allow_redirects=False)
             if response.status_code == 200:
-                self.endpoint_type = "P"       # Envoy-C, production only
+                self.endpoint_type = "P1"       # Envoy-C or Envoy-S, production only
                 return
             else:
                 self.endpoint_url = "http://{}/production".format(self.host)
@@ -94,9 +92,9 @@ class EnvoyReader():
 
         response = await requests.get(
             self.endpoint_url, timeout=30, allow_redirects=False)
-        if self.endpoint_type == "P" or self.endpoint_type == "PC":
+        if self.endpoint_type != "P0":
             return response.json()     # these Envoys have .json
-        if self.endpoint_type == "P0":
+        else:
             return response.text       # these Envoys have .html
 
     def create_connect_errormessage(self):
@@ -125,7 +123,7 @@ class EnvoyReader():
                 except IndexError:
                     production = raw_json["production"][0]["wNow"]
             else:
-                if self.endpoint_type == "P":
+                if self.endpoint_type == "P1":
                     raw_json = await self.call_api()
                     production = raw_json["wattsNow"]
                 else:
@@ -157,7 +155,7 @@ class EnvoyReader():
         """Call API and parse consumption values from response"""
         if self.endpoint_type == "":
             await self.detect_model()
-        if self.endpoint_type == "P" or self.endpoint_type == "P0":
+        if self.endpoint_type != "PC":
             return self.message_consumption_not_available
 
         try:
@@ -180,7 +178,7 @@ class EnvoyReader():
                 raw_json = await self.call_api()
                 daily_production = raw_json["production"][1]["whToday"]
             else:
-                if self.endpoint_type == "P":
+                if self.endpoint_type == "P1":
                     raw_json = await self.call_api()
                     daily_production = raw_json["wattHoursToday"]
                 else:
@@ -215,7 +213,7 @@ class EnvoyReader():
         """Call API and parse todays consumption values from response"""
         if self.endpoint_type == "":
             await self.detect_model()
-        if self.endpoint_type == "P" or self.endpoint_type == "P0":
+        if self.endpoint_type != "PC":
             return self.message_consumption_not_available
 
         try:
@@ -239,7 +237,7 @@ class EnvoyReader():
                 raw_json = await self.call_api()
                 seven_days_production = raw_json["production"][1]["whLastSevenDays"]
             else:
-                if self.endpoint_type == "P":
+                if self.endpoint_type == "P1":
                     raw_json = await self.call_api()
                     seven_days_production = raw_json["wattHoursSevenDays"]
                 else:
@@ -273,7 +271,7 @@ class EnvoyReader():
          the response"""
         if self.endpoint_type == "":
             await self.detect_model()
-        if self.endpoint_type == "P" or self.endpoint_type == "P0":
+        if self.endpoint_type != "PC":
             return self.message_consumption_not_available
 
         try:
@@ -296,7 +294,7 @@ class EnvoyReader():
                 raw_json = await self.call_api()
                 lifetime_production = raw_json["production"][1]["whLifetime"]
             else:
-                if self.endpoint_type == "P":
+                if self.endpoint_type == "P1":
                     raw_json = await self.call_api()
                     lifetime_production = raw_json["wattHoursLifetime"]
                 else:
@@ -330,7 +328,7 @@ class EnvoyReader():
         """Call API and parse the lifetime of consumption from response"""
         if self.endpoint_type == "":
             await self.detect_model()
-        if self.endpoint_type == "P" or self.endpoint_type == "P0":
+        if self.endpoint_type != "PC":
             return self.message_consumption_not_available
 
         try:
@@ -443,7 +441,7 @@ if __name__ == "__main__":
         USERNAME = "envoy"
 
     if PASSWORD == "":
-        TESTREADER = EnvoyReader(HOST, USERNAME)
+        TESTREADER = EnvoyReader(HOST, USERNAME, "")
     else:
         TESTREADER = EnvoyReader(HOST, USERNAME, PASSWORD)
 

@@ -375,7 +375,7 @@ class EnvoyReader():
                 return response_dict
             else:
                 response.raise_for_status()
-        except httpx.exceptions.HTTPError:
+        except httpx.HTTPError:
             return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError, TypeError):
             return self.create_json_errormessage()

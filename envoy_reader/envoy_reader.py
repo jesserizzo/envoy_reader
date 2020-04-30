@@ -362,11 +362,6 @@ class EnvoyReader():
                 response = await client.get("http://{}/api/v1/production/inverters"
                                             .format(self.host),
                                             auth=httpx.DigestAuth(self.username, self.password))
-            #response = requests_sync.get(
-            #    "http://{}/api/v1/production/inverters"
-            #    .format(self.host),
-            #    auth=HTTPDigestAuth(self.username,
-            #                        self.password))
             if response is not None and response.status_code != 401:                                    
                 response_dict = {}
                 for item in response.json():

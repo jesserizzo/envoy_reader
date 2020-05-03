@@ -2,7 +2,6 @@ import asyncio
 import json
 import time
 
-from requests.auth import HTTPDigestAuth
 import requests_async as requests
 import re
 import httpx

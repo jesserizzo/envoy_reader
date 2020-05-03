@@ -3,7 +3,6 @@ import json
 import time
 
 from requests.auth import HTTPDigestAuth
-import requests as requests_sync
 import requests_async as requests
 import re
 import httpx

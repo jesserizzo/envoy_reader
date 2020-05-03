@@ -2,10 +2,10 @@ import asyncio
 import json
 import time
 
-from requests.auth import HTTPDigestAuth
-import requests as requests_sync
 import requests_async as requests
 import re
+import httpx
+import h11
 
 """Module to read production and consumption values from an Enphase Envoy on
  the local network"""
@@ -356,11 +356,10 @@ class EnvoyReader():
                 self.password = self.serial_number_last_six
 
         try:
-            response = requests_sync.get(
-                "http://{}/api/v1/production/inverters"
-                .format(self.host),
-                auth=HTTPDigestAuth(self.username,
-                                    self.password))
+            async with httpx.AsyncClient() as client:
+                response = await client.get("http://{}/api/v1/production/inverters"
+                                            .format(self.host),
+                                            auth=httpx.DigestAuth(self.username, self.password))
             if response is not None and response.status_code != 401:                                    
                 response_dict = {}
                 for item in response.json():
@@ -369,10 +368,12 @@ class EnvoyReader():
                 return response_dict
             else:
                 response.raise_for_status()
-        except requests.exceptions.ConnectionError:
+        except httpx.HTTPError:
             return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError, TypeError):
             return self.create_json_errormessage()
+        except h11.RemoteProtocolError:
+            await response.close()
 
     async def update(self):
         """

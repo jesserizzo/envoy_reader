@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/jesserizzo/envoy_reader",
     packages=setuptools.find_packages(),
     install_requires=[
-        "requests >= 2.22.0",
+        "httpx >= 0.12.1",
         "requests_async >= 0.6.0"
     ],
     classifiers=[

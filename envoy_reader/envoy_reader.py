@@ -48,7 +48,7 @@ class EnvoyReader():
 
     @property
     def password(self):
-        if self._password is '' and self._serial_number is not '':
+        if self._password == '' and self._serial_number != '':
             return self.serial_number[-6:]
         else:
             return self._password
@@ -250,7 +250,7 @@ class EnvoyReader():
         
     async def get_serial_number(self):
         """Method to get last six digits of Envoy serial number for auth"""
-        if self._serial_number is not '' or self._password is not '':
+        if self._serial_number != '' or self._password != '':
             return
         try:
             status, raw_text = await self.getEnvoyResponse(INFO_XML_URL, json_format = False)

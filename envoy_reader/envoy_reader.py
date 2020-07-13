@@ -269,6 +269,10 @@ class EnvoyReader():
             for index in range(minlen):
                 self.sensors[names[index]] = values[index]
 
+    def is_features_supported(self, response, features):
+        return (response in self._features
+                and (self._features[response] & features) == features)
+
     async def update_required_sensors(self):
         valid_sensors = self.required_sensors & self.support_features
         _LOGGER.debug("valid sensors: {}".format(valid_sensors))
@@ -280,8 +284,7 @@ class EnvoyReader():
             sensors = 'consumption', 'daily_consumption', 'seven_days_consumption', 'lifetime_consumption'
             values = await self.getConsumptionFromProductionJson()
             await self.update_sensors_value(sensors, values)
-            if response_json_production in self._features and \
-               (self._features[response_json_production] & production_sensors) == production_sensors:
+            if self.is_features_supported(response_json_production, production_sensors):
                 sensors = 'production', 'daily_production', 'seven_days_production', 'lifetime_production'
                 values = await self.getProductionFromProductionJson()
                 await self.update_sensors_value(sensors, values)
@@ -289,16 +292,13 @@ class EnvoyReader():
         if production_sensors:
             # read from api_v1 first, as it is faster
             sensors = 'production', 'daily_production', 'seven_days_production', 'lifetime_production'
-            if (response_api_v1_production in self._features
-               and (self._features[response_api_v1_production] & production_sensors) == production_sensors):
+            if self.is_features_supported(response_api_v1_production, production_sensors):
                 values = await self.getProductionFromProductionAPI()
                 await self.update_sensors_value(sensors, values)
-            elif (response_json_production in self._features
-                  and (self._features[response_json_production] & production_sensors) == production_sensors):
+            elif self.is_features_supported(response_json_production, production_sensors):
                 values = await self.getProductionFromProductionJson()
                 await self.update_sensors_value(sensors, values)
-            elif (response_html_production in self._features
-                  and (self._features[response_html_production] & production_sensors) == production_sensors):
+            elif self.is_features_supported(response_html_production, production_sensors):
                 values = await self.getProductionFromProductionHTML()
                 await self.update_sensors_value(sensors, values)
         if inverters_sensors:

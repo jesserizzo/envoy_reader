@@ -294,13 +294,11 @@ class EnvoyReader():
             sensors = 'production', 'daily_production', 'seven_days_production', 'lifetime_production'
             if self.is_features_supported(response_api_v1_production, production_sensors):
                 values = await self.getProductionFromProductionAPI()
-                await self.update_sensors_value(sensors, values)
             elif self.is_features_supported(response_json_production, production_sensors):
                 values = await self.getProductionFromProductionJson()
-                await self.update_sensors_value(sensors, values)
             elif self.is_features_supported(response_html_production, production_sensors):
                 values = await self.getProductionFromProductionHTML()
-                await self.update_sensors_value(sensors, values)
+            await self.update_sensors_value(sensors, values)
         if inverters_sensors:
             values = await self.getInvertersFromProductionAPI()
             self.sensors['inverters_production'] = values

@@ -351,7 +351,7 @@ class EnvoyReader():
         try:
             response = requests_sync.get(
                 "http://{}/api/v1/production/inverters"
-                .format(self.host),
+                .format(self.host), timeout=30,
                 auth=HTTPDigestAuth(self.username,
                                     self.password))
             if response is not None and response.status_code != 401:                                    

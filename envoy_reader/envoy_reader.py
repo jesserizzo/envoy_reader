@@ -19,6 +19,9 @@ WEEK_PRODUCTION_REGEX = \
 LIFE_PRODUCTION_REGEX = \
     r'<td>Since Installation</td>\s+<td>\s*(\d+|\d+\.\d+)\s*(Wh|kWh|MWh)</td>'
 
+ENDPOINT_URL_PRODUCTION_JSON = "http://{}/production.json"
+ENDPOINT_URL_PRODUCTION_V1 = "http://{}/api/v1/production"
+ENDPOINT_URL_PRODUCTION = "http://{}/production"
 
 class EnvoyReader():
     """Instance of EnvoyReader"""
@@ -34,38 +37,52 @@ class EnvoyReader():
         self.username = username
         self.password = password
         self.endpoint_type = ""
-        self.endpoint_url = ""
         self.serial_number_last_six = ""
+        self.endpoint_production_json_results = ""
+        self.endpoint_production_v1_results = ""
+        self.isMeteringEnabled = False
+        self.isDataRetrieved = False
 
     def hasProductionAndConsumption(self, json):
         """Check if json has keys for both production and consumption"""
         return "production" in json and "consumption" in json
 
+    def hasMeteringSetup(self, json):
+        """Check if Active Count of Production CTs (eim) installed is greater than one"""
+        if json["production"][1]["activeCount"] > 0:
+            return True
+        else:
+            return False
+
+    async def getData(self):
+        self.endpoint_production_json_results = await requests.get(
+            ENDPOINT_URL_PRODUCTION_JSON.format(self.host), timeout=30, allow_redirects=False)
+        self.endpoint_production_v1_results = await requests.get(
+            ENDPOINT_URL_PRODUCTION_V1.format(self.host), timeout=30, allow_redirects=False)
+        self.isDataRetrieved = True
+
     async def detect_model(self):
         """Method to determine if the Envoy supports consumption values or
          only production"""
-        self.endpoint_url = "http://{}/production.json".format(self.host)
-        response = await requests.get(
-            self.endpoint_url, timeout=30, allow_redirects=False)
-        if response.status_code == 200 and self.hasProductionAndConsumption(response.json()):
+        if not self.isDataRetrieved:
+            await self.getData()
+
+        if self.endpoint_production_json_results.status_code == 200 and self.hasProductionAndConsumption(self.endpoint_production_json_results.json()):
+            self.isMeteringEnabled = self.hasMeteringSetup(self.endpoint_production_json_results.json())
             self.endpoint_type = "PC"
             return
         else:
-            self.endpoint_url = "http://{}/api/v1/production".format(self.host)
-            response = await requests.get(
-                self.endpoint_url, timeout=30, allow_redirects=False)
-            if response.status_code == 200:
+            if self.endpoint_production_v1_results.status_code == 200:
                 self.endpoint_type = "P"       # Envoy-C, production only
                 return
             else:
-                self.endpoint_url = "http://{}/production".format(self.host)
+                endpoint_url = ENDPOINT_URL_PRODUCTION.format(self.host)
                 response = await requests.get(
-                    self.endpoint_url, timeout=30, allow_redirects=False)
+                    endpoint_url, timeout=30, allow_redirects=False)
                 if response.status_code == 200:
                     self.endpoint_type = "P0"       # older Envoy-C
                     return
 
-        self.endpoint_url = ""
         raise RuntimeError(
             "Could not connect or determine Envoy model. " +
             "Check that the device is up at 'http://" + self.host + "'.")
@@ -81,10 +98,6 @@ class EnvoyReader():
                 self.serial_number_last_six = sn
         except requests.exceptions.ConnectionError:
             return self.create_connect_errormessage()
-        # except
-        #     print(
-        #         "Unable to find device serial number, " +
-        #         "this is needed to read inverter production.")
 
     async def call_api(self):
         """Method to call the Envoy API"""
@@ -92,11 +105,14 @@ class EnvoyReader():
         if self.endpoint_type == "":
             await self.detect_model()
 
-        response = await requests.get(
-            self.endpoint_url, timeout=30, allow_redirects=False)
+        """Code path won't be used anymore"""
         if self.endpoint_type == "P" or self.endpoint_type == "PC":
-            return response.json()     # these Envoys have .json
+            return self.endpoint_production_json_results.json()     # these Envoys have .json
+   
+        """Leaving here to get data for older Envoys"""
         if self.endpoint_type == "P0":
+            response = await requests.get(
+                ENDPOINT_URL_PRODUCTION, timeout=30, allow_redirects=False)
             return response.text       # these Envoys have .html
 
     def create_connect_errormessage(self):
@@ -116,17 +132,19 @@ class EnvoyReader():
         """Call API and parse production values from response"""
         if self.endpoint_type == "":
             await self.detect_model()
+        if not self.isDataRetrieved:
+            await self.getData()
 
         try:
             if self.endpoint_type == "PC":
-                raw_json = await self.call_api()
-                try:
-                    production = raw_json["production"][1]["wNow"]
-                except IndexError:
+                raw_json = self.endpoint_production_json_results.json()
+                if self.isMeteringEnabled:
                     production = raw_json["production"][0]["wNow"]
+                else:
+                    production = raw_json["production"][1]["wNow"]
             else:
                 if self.endpoint_type == "P":
-                    raw_json = await self.call_api()
+                    raw_json = self.endpoint_production_v1_results.json()
                     production = raw_json["wattsNow"]
                 else:
                     if self.endpoint_type == "P0":
@@ -157,11 +175,13 @@ class EnvoyReader():
         """Call API and parse consumption values from response"""
         if self.endpoint_type == "":
             await self.detect_model()
+        if not self.isDataRetrieved:
+            await self.getData()
         if self.endpoint_type == "P" or self.endpoint_type == "P0":
             return self.message_consumption_not_available
 
         try:
-            raw_json = await self.call_api()
+            raw_json = self.endpoint_production_json_results.json()
             consumption = raw_json["consumption"][0]["wNow"]
             return int(consumption)
 
@@ -174,14 +194,19 @@ class EnvoyReader():
         """Call API and parse todays production values from response"""
         if self.endpoint_type == "":
             await self.detect_model()
+        if not self.isDataRetrieved:
+            await self.getData()
 
         try:
-            if self.endpoint_type == "PC":
-                raw_json = await self.call_api()
+            if self.endpoint_type == "PC" and self.isMeteringEnabled:
+                raw_json = self.endpoint_production_json_results.json()
                 daily_production = raw_json["production"][1]["whToday"]
+            elif self.endpoint_type == "PC" and not self.isMeteringEnabled:
+                raw_json = self.endpoint_production_v1_results.json()
+                daily_production = raw_json["wattHoursToday"]
             else:
                 if self.endpoint_type == "P":
-                    raw_json = await self.call_api()
+                    raw_json = self.endpoint_production_v1_results.json()
                     daily_production = raw_json["wattHoursToday"]
                 else:
                     if self.endpoint_type == "P0":
@@ -215,11 +240,13 @@ class EnvoyReader():
         """Call API and parse todays consumption values from response"""
         if self.endpoint_type == "":
             await self.detect_model()
+        if not self.isDataRetrieved:
+            await self.getData()
         if self.endpoint_type == "P" or self.endpoint_type == "P0":
             return self.message_consumption_not_available
 
         try:
-            raw_json = await self.call_api()
+            raw_json = self.endpoint_production_json_results.json()
             daily_consumption = raw_json["consumption"][0]["whToday"]
             return int(daily_consumption)
 
@@ -233,14 +260,19 @@ class EnvoyReader():
          response"""
         if self.endpoint_type == "":
             await self.detect_model()
+        if not self.isDataRetrieved:
+            await self.getData()
 
         try:
-            if self.endpoint_type == "PC":
-                raw_json = await self.call_api()
+            if self.endpoint_type == "PC" and self.isMeteringEnabled:
+                raw_json = self.endpoint_production_json_results.json()
                 seven_days_production = raw_json["production"][1]["whLastSevenDays"]
+            elif self.endpoint_type == "PC" and not self.isMeteringEnabled:
+                raw_json = self.endpoint_production_v1_results.json()
+                seven_days_production = raw_json["wattHoursSevenDays"]
             else:
                 if self.endpoint_type == "P":
-                    raw_json = await self.call_api()
+                    raw_json = self.endpoint_production_v1_results.json()
                     seven_days_production = raw_json["wattHoursSevenDays"]
                 else:
                     if self.endpoint_type == "P0":
@@ -273,11 +305,13 @@ class EnvoyReader():
          the response"""
         if self.endpoint_type == "":
             await self.detect_model()
+        if not self.isDataRetrieved:
+            await self.getData()
         if self.endpoint_type == "P" or self.endpoint_type == "P0":
             return self.message_consumption_not_available
 
         try:
-            raw_json = await self.call_api()
+            raw_json = self.endpoint_production_json_results.json()
             seven_days_consumption = raw_json["consumption"][0]["whLastSevenDays"]
             return int(seven_days_consumption)
 
@@ -290,14 +324,19 @@ class EnvoyReader():
         """Call API and parse the lifetime of production from response"""
         if self.endpoint_type == "":
             await self.detect_model()
+        if not self.isDataRetrieved:
+            await self.getData()
 
         try:
-            if self.endpoint_type == "PC":
-                raw_json = await self.call_api()
+            if self.endpoint_type == "PC" and self.isMeteringEnabled:
+                raw_json = self.endpoint_production_json_results.json()
                 lifetime_production = raw_json["production"][1]["whLifetime"]
+            elif self.endpoint_type == "PC" and not self.isMeteringEnabled:
+                raw_json = self.endpoint_production_v1_results.json()
+                lifetime_production = raw_json["wattHoursLifetime"]
             else:
                 if self.endpoint_type == "P":
-                    raw_json = await self.call_api()
+                    raw_json = self.endpoint_production_v1_results.json()
                     lifetime_production = raw_json["wattHoursLifetime"]
                 else:
                     if self.endpoint_type == "P0":
@@ -330,11 +369,13 @@ class EnvoyReader():
         """Call API and parse the lifetime of consumption from response"""
         if self.endpoint_type == "":
             await self.detect_model()
+        if not self.isDataRetrieved:
+            await self.getData()
         if self.endpoint_type == "P" or self.endpoint_type == "P0":
             return self.message_consumption_not_available
 
         try:
-            raw_json = await self.call_api()
+            raw_json = self.endpoint_production_json_results.json()
             lifetime_consumption = raw_json["consumption"][0]["whLifetime"]
             return int(lifetime_consumption)
 
@@ -381,6 +422,11 @@ class EnvoyReader():
         """
         data = {}
 
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(asyncio.gather(
+            self.getData()
+        ))
+        
         tasks = [
             self.production(),
             self.consumption(),
@@ -404,6 +450,11 @@ class EnvoyReader():
         """If running this module directly, print all the values in the
          console."""
         print("Reading...")
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(asyncio.gather(
+            self.getData()
+        ))
+
         loop = asyncio.get_event_loop()
         results = loop.run_until_complete(asyncio.gather(
             self.production(),

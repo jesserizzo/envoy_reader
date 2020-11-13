@@ -422,10 +422,7 @@ class EnvoyReader():
         """
         data = {}
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(asyncio.gather(
-            self.getData()
-        ))
+        await self.getData()
         
         tasks = [
             self.production(),

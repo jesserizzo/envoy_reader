@@ -464,7 +464,6 @@ class EnvoyReader():
             self.lifetime_consumption(),
             self.inverters_production()))
 
-        print("Metering (CT) Status:    {}".format(self.isMeteringEnabled))
         print("production:              {}".format(results[0]))
         print("consumption:             {}".format(results[1]))
         print("daily_production:        {}".format(results[2]))

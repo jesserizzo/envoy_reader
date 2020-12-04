@@ -3,6 +3,7 @@ import json
 import time
 
 import requests_async as requests
+from requests_async.exceptions import HTTPError, RequestException, Timeout
 import re
 import httpx
 import h11
@@ -55,10 +56,13 @@ class EnvoyReader():
             return False
 
     async def getData(self):
-        self.endpoint_production_json_results = await requests.get(
-            ENDPOINT_URL_PRODUCTION_JSON.format(self.host), timeout=30, allow_redirects=False)
-        self.endpoint_production_v1_results = await requests.get(
-            ENDPOINT_URL_PRODUCTION_V1.format(self.host), timeout=30, allow_redirects=False)
+        try:
+            self.endpoint_production_json_results = await requests.get(
+                ENDPOINT_URL_PRODUCTION_JSON.format(self.host), timeout=30, allow_redirects=False)
+            self.endpoint_production_v1_results = await requests.get(
+                ENDPOINT_URL_PRODUCTION_V1.format(self.host), timeout=30, allow_redirects=False)
+        except (HTTPError, RequestException, Timeout):
+            raise
         self.isDataRetrieved = True
 
     async def detect_model(self):
@@ -97,7 +101,7 @@ class EnvoyReader():
                 sn = response.text.split("<sn>")[1].split("</sn>")[0][-6:]
                 self.serial_number_last_six = sn
         except requests.exceptions.ConnectionError:
-            return self.create_connect_errormessage()
+            raise
 
     async def call_api(self):
         """Method to call the Envoy API"""
@@ -123,7 +127,7 @@ class EnvoyReader():
 
     def create_json_errormessage(self):
         """Create error message if unable to parse JSON response"""
-        return ("Got a response from '" + self.endpoint_url +
+        return ("Got a response from '" + self.host +
                 "', but metric could not be found. " +
                 "Maybe your model of Envoy doesn't " +
                 "support the requested metric.")
@@ -166,10 +170,8 @@ class EnvoyReader():
                                 + text)
             return int(production)
 
-        except requests.exceptions.ConnectionError:
-            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return self.create_json_errormessage()
+            raise
 
     async def consumption(self):
         """Call API and parse consumption values from response"""
@@ -185,10 +187,8 @@ class EnvoyReader():
             consumption = raw_json["consumption"][0]["wNow"]
             return int(consumption)
 
-        except requests.exceptions.ConnectionError:
-            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return self.create_json_errormessage()
+            raise
 
     async def daily_production(self):
         """Call API and parse todays production values from response"""
@@ -231,10 +231,8 @@ class EnvoyReader():
                                 text)
             return int(daily_production)
 
-        except requests.exceptions.ConnectionError:
-            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return self.create_json_errormessage()
+            raise
 
     async def daily_consumption(self):
         """Call API and parse todays consumption values from response"""
@@ -249,11 +247,8 @@ class EnvoyReader():
             raw_json = self.endpoint_production_json_results.json()
             daily_consumption = raw_json["consumption"][0]["whToday"]
             return int(daily_consumption)
-
-        except requests.exceptions.ConnectionError:
-            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return self.create_json_errormessage()
+            raise
 
     async def seven_days_production(self):
         """Call API and parse the past seven days production values from the
@@ -294,11 +289,8 @@ class EnvoyReader():
                             raise RuntimeError("No match for 7 Day production, "
                                                "check REGEX " + text)
             return int(seven_days_production)
-
-        except requests.exceptions.ConnectionError:
-            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return self.create_json_errormessage()
+            raise
 
     async def seven_days_consumption(self):
         """Call API and parse the past seven days consumption values from
@@ -314,11 +306,8 @@ class EnvoyReader():
             raw_json = self.endpoint_production_json_results.json()
             seven_days_consumption = raw_json["consumption"][0]["whLastSevenDays"]
             return int(seven_days_consumption)
-
-        except requests.exceptions.ConnectionError:
-            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return self.create_json_errormessage()
+            raise
 
     async def lifetime_production(self):
         """Call API and parse the lifetime of production from response"""
@@ -359,11 +348,8 @@ class EnvoyReader():
                                 "No match for Lifetime production, "
                                 "check REGEX " + text)
             return int(lifetime_production)
-
-        except requests.exceptions.ConnectionError:
-            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return self.create_json_errormessage()
+            raise
 
     async def lifetime_consumption(self):
         """Call API and parse the lifetime of consumption from response"""
@@ -378,11 +364,8 @@ class EnvoyReader():
             raw_json = self.endpoint_production_json_results.json()
             lifetime_consumption = raw_json["consumption"][0]["whLifetime"]
             return int(lifetime_consumption)
-
-        except requests.exceptions.ConnectionError:
-            return self.create_connect_errormessage()
         except (json.decoder.JSONDecodeError, KeyError, IndexError):
-            return self.create_json_errormessage()
+            raise
 
     async def inverters_production(self):
         """Hit a different Envoy endpoint and get the production values for
@@ -393,7 +376,10 @@ class EnvoyReader():
         number as the password.  Otherwise use the password argument value."""
         if self.password == "":
             if self.serial_number_last_six == "":
-                await self.get_serial_number()
+                try:
+                    await self.get_serial_number()
+                except requests.exceptions.ConnectionError:
+                    raise
                 self.password = self.serial_number_last_six
 
         try:
@@ -409,39 +395,12 @@ class EnvoyReader():
                 return response_dict
             else:
                 response.raise_for_status()
-        except httpx.HTTPError:
-            return self.create_connect_errormessage()
-        except (json.decoder.JSONDecodeError, KeyError, IndexError, TypeError):
-            return self.create_json_errormessage()
+        except (json.decoder.JSONDecodeError, KeyError, IndexError, TypeError, httpx.RemoteProtocolError):
+            raise
         except h11.RemoteProtocolError:
             await response.close()
-
-    async def update(self):
-        """
-        Single entry point for Home Assistant
-        """
-        data = {}
-
-        await self.getData()
-        
-        tasks = [
-            self.production(),
-            self.consumption(),
-            self.daily_production(),
-            self.daily_consumption(),
-            self.seven_days_production(),
-            self.seven_days_consumption(),
-            self.lifetime_production(),
-            self.lifetime_consumption(),
-            self.inverters_production()
-        ]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-        for key, result in zip(tasks, results):
-            key = key.__name__
-            data[key] = result
-
-        return data
+        except httpx.HTTPError:
+            response.raise_for_status()
 
     def run_in_console(self):
         """If running this module directly, print all the values in the
@@ -449,7 +408,7 @@ class EnvoyReader():
         print("Reading...")
         loop = asyncio.get_event_loop()
         loop.run_until_complete(asyncio.gather(
-            self.getData()
+            self.getData(), return_exceptions=True
         ))
 
         loop = asyncio.get_event_loop()
@@ -462,7 +421,7 @@ class EnvoyReader():
             self.seven_days_consumption(),
             self.lifetime_production(),
             self.lifetime_consumption(),
-            self.inverters_production()))
+            self.inverters_production(), return_exceptions=True))
 
         print("production:              {}".format(results[0]))
         print("consumption:             {}".format(results[1]))

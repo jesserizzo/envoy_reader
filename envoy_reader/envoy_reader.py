@@ -421,7 +421,7 @@ class EnvoyReader():
             self.seven_days_consumption(),
             self.lifetime_production(),
             self.lifetime_consumption(),
-            self.inverters_production()))
+            self.inverters_production(), return_exceptions=True))
 
         print("production:              {}".format(results[0]))
         print("consumption:             {}".format(results[1]))

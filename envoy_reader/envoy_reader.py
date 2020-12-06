@@ -4,7 +4,6 @@ import time
 
 import re
 import httpx
-import h11
 
 """Module to read production and consumption values from an Enphase Envoy on
  the local network"""

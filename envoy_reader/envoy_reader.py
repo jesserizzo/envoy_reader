@@ -2,8 +2,6 @@ import asyncio
 import json
 import time
 
-import requests_async as requests
-from requests_async.exceptions import HTTPError, RequestException, Timeout
 import re
 import httpx
 import h11
@@ -57,11 +55,12 @@ class EnvoyReader():
 
     async def getData(self):
         try:
-            self.endpoint_production_json_results = await requests.get(
-                ENDPOINT_URL_PRODUCTION_JSON.format(self.host), timeout=30, allow_redirects=False)
-            self.endpoint_production_v1_results = await requests.get(
-                ENDPOINT_URL_PRODUCTION_V1.format(self.host), timeout=30, allow_redirects=False)
-        except (HTTPError, RequestException, Timeout):
+            async with httpx.AsyncClient() as client:
+                self.endpoint_production_json_results = await client.get(
+                    ENDPOINT_URL_PRODUCTION_JSON.format(self.host), timeout=30, allow_redirects=False)
+                self.endpoint_production_v1_results = await client.get(
+                    ENDPOINT_URL_PRODUCTION_V1.format(self.host), timeout=30, allow_redirects=False)
+        except httpx.HTTPError:
             raise
         self.isDataRetrieved = True
 
@@ -81,8 +80,9 @@ class EnvoyReader():
                 return
             else:
                 endpoint_url = ENDPOINT_URL_PRODUCTION.format(self.host)
-                response = await requests.get(
-                    endpoint_url, timeout=30, allow_redirects=False)
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(
+                        endpoint_url, timeout=30, allow_redirects=False)
                 if response.status_code == 200:
                     self.endpoint_type = "P0"       # older Envoy-C
                     return
@@ -94,13 +94,14 @@ class EnvoyReader():
     async def get_serial_number(self):
         """Method to get last six digits of Envoy serial number for auth"""
         try:
-            response = await requests.get(
-                "http://{}/info.xml".format(self.host),
-                timeout=30, allow_redirects=False)
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    "http://{}/info.xml".format(self.host),
+                    timeout=30, allow_redirects=False)
             if len(response.text) > 0:
                 sn = response.text.split("<sn>")[1].split("</sn>")[0][-6:]
                 self.serial_number_last_six = sn
-        except requests.exceptions.ConnectionError:
+        except httpx.ConnectionError:
             raise
 
     async def call_api(self):
@@ -115,8 +116,9 @@ class EnvoyReader():
    
         """Leaving here to get data for older Envoys"""
         if self.endpoint_type == "P0":
-            response = await requests.get(
-                ENDPOINT_URL_PRODUCTION, timeout=30, allow_redirects=False)
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    ENDPOINT_URL_PRODUCTION, timeout=30, allow_redirects=False)
             return response.text       # these Envoys have .html
 
     def create_connect_errormessage(self):
@@ -378,7 +380,7 @@ class EnvoyReader():
             if self.serial_number_last_six == "":
                 try:
                     await self.get_serial_number()
-                except requests.exceptions.ConnectionError:
+                except httpx.HTTPError:
                     raise
                 self.password = self.serial_number_last_six
 
@@ -397,7 +399,7 @@ class EnvoyReader():
                 response.raise_for_status()
         except (json.decoder.JSONDecodeError, KeyError, IndexError, TypeError, httpx.RemoteProtocolError):
             raise
-        except h11.RemoteProtocolError:
+        except httpx.RemoteProtocolError:
             await response.close()
         except httpx.HTTPError:
             response.raise_for_status()

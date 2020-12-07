@@ -437,7 +437,7 @@ class EnvoyReader():
         print("seven_days_consumption:  {}".format(results[5]))
         print("lifetime_production:     {}".format(results[6]))
         print("lifetime_consumption:    {}".format(results[7]))
-        print("inverters_production:   {}".format(results[8]))
+        print("inverters_production:    {}".format(results[8]))
 
 
 if __name__ == "__main__":

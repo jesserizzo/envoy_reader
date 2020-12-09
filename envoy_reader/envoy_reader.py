@@ -112,7 +112,7 @@ class EnvoyReader():
         """Leaving here to get data for older Envoys"""
         if self.endpoint_type == "P0":
             response = await requests.get(
-                ENDPOINT_URL_PRODUCTION, timeout=30, allow_redirects=False)
+                ENDPOINT_URL_PRODUCTION.format(self.host), timeout=30, allow_redirects=False)
             return response.text       # these Envoys have .html
 
     def create_connect_errormessage(self):

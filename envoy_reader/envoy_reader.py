@@ -387,6 +387,11 @@ class EnvoyReader():
     async def inverters_production(self):
         """Hit a different Envoy endpoint and get the production values for
          individual inverters"""
+        
+        if self.endpoint_type == "":
+            await self.detect_model()
+        if self.endpoint_type == "P0":
+            return "Inverter data not available for your Envoy device."
          
         """If a password was not given as an argument when instantiating
         the EnvoyReader object than use the last six numbers of the serial

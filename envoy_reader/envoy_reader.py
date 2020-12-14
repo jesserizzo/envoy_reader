@@ -59,7 +59,6 @@ class EnvoyReader():
             ENDPOINT_URL_PRODUCTION_JSON.format(self.host), timeout=30, allow_redirects=False)
         self.endpoint_production_v1_results = await requests.get(
             ENDPOINT_URL_PRODUCTION_V1.format(self.host), timeout=30, allow_redirects=False)
-        self.isDataRetrieved = True
 
     async def detect_model(self):
         """Method to determine if the Envoy supports consumption values or

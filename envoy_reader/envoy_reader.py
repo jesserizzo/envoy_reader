@@ -44,7 +44,6 @@ class EnvoyReader():
         self.endpoint_production_inverters = ""
         self.endpoint_production_results = ""
         self.isMeteringEnabled = False
-        self.isDataRetrieved = False
 
     def hasProductionAndConsumption(self, json):
         """Check if json has keys for both production and consumption"""
@@ -96,8 +95,6 @@ class EnvoyReader():
                 await response.close()
             except httpx.HTTPError:
                 response.raise_for_status()
-
-        self.isDataRetrieved = True
 
     async def detect_model(self):
         """Method to determine if the Envoy supports consumption values or

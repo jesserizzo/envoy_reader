@@ -164,7 +164,7 @@ class EnvoyReader():
                     production = raw_json["wattsNow"]
                 else:
                     if self.endpoint_type == "P0":
-                        text = self.endpoint_production_results.text()
+                        text = self.endpoint_production_results.text
                         match = re.search(
                             PRODUCTION_REGEX, text, re.MULTILINE)
                         if match:
@@ -218,7 +218,7 @@ class EnvoyReader():
                     daily_production = raw_json["wattHoursToday"]
                 else:
                     if self.endpoint_type == "P0":
-                        text = self.endpoint_production_results.text()
+                        text = self.endpoint_production_results.text
                         match = re.search(
                             DAY_PRODUCTION_REGEX, text, re.MULTILINE)
                         if match:
@@ -274,7 +274,7 @@ class EnvoyReader():
                     seven_days_production = raw_json["wattHoursSevenDays"]
                 else:
                     if self.endpoint_type == "P0":
-                        text = self.endpoint_production_results.text()
+                        text = self.endpoint_production_results.text
                         match = re.search(
                             WEEK_PRODUCTION_REGEX, text, re.MULTILINE)
                         if match:
@@ -327,7 +327,7 @@ class EnvoyReader():
                     lifetime_production = raw_json["wattHoursLifetime"]
                 else:
                     if self.endpoint_type == "P0":
-                        text = self.endpoint_production_results.text()
+                        text = self.endpoint_production_results.text
                         match = re.search(
                             LIFE_PRODUCTION_REGEX, text, re.MULTILINE)
                         if match:

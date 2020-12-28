@@ -97,8 +97,8 @@ class EnvoyReader():
                         response.raise_for_status()
                     break
                 break
-        if(i == 2):
-            raise httpx.RemoteProtocolError(message='Malformed request. Failed after 3 retries.', request=None)
+            if(i == 2):
+                raise httpx.RemoteProtocolError(message='Malformed request. Failed after 3 retries.', request=None)
 
     async def detect_model(self):
         """Method to determine if the Envoy supports consumption values or

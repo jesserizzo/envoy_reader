@@ -97,8 +97,8 @@ class EnvoyReader():
                         response.raise_for_status()
                     break
                 break
-        if(i == 2):
-            raise httpx.RemoteProtocolError(message='Malformed request. Failed after 3 retries.', request=None)
+            if(i == 2):
+                raise httpx.RemoteProtocolError(message='Malformed request. Failed after 3 retries.', request=None)
 
     async def detect_model(self):
         """Method to determine if the Envoy supports consumption values or
@@ -374,7 +374,7 @@ class EnvoyReader():
 
         """Only return data if Envoy supports retrieving Inverter data"""
         if self.endpoint_type == "P0":
-            return "Inverter data not available for your Envoy device."
+            return None
 
         response_dict = {}
         try:
@@ -416,6 +416,8 @@ class EnvoyReader():
         print("lifetime_consumption:    {}".format(results[7]))
         if "401" in str(dataResults):
             print("inverters_production:    Unable to retrieve inverter data - Authentication failure")
+        elif results[8] is None:
+            print("inverters_production:    Inverter data not available for your Envoy device.")
         else:
             print("inverters_production:    {}".format(results[8]))
 

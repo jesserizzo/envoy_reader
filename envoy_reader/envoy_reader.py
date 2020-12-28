@@ -57,44 +57,50 @@ class EnvoyReader():
             return False
 
     async def getData(self):
-        try:
-            async with httpx.AsyncClient() as client:
-                self.endpoint_production_json_results = await client.get(
-                    ENDPOINT_URL_PRODUCTION_JSON.format(self.host), timeout=30, allow_redirects=False)
-                self.endpoint_production_v1_results = await client.get(
-                    ENDPOINT_URL_PRODUCTION_V1.format(self.host), timeout=30, allow_redirects=False)
-                self.endpoint_production_results = await client.get(
-                    ENDPOINT_URL_PRODUCTION.format(self.host), timeout=30, allow_redirects=False)
-        except httpx.HTTPError:
-            pass
         
-        await self.detect_model()
-        
-        if(self.get_inverters):
-            """If a password was not given as an argument when instantiating
-            the EnvoyReader object than use the last six numbers of the serial
-            number as the password.  Otherwise use the password argument value."""
-            if self.password == "":
-                if self.serial_number_last_six == "":
-                    try:
-                        await self.get_serial_number()
-                    except httpx.HTTPError:
-                        raise
-                    self.password = self.serial_number_last_six
-            try:
-                async with httpx.AsyncClient() as client:
-                    response = await client.get(ENDPOINT_URL_PRODUCTION_INVERTERS.format(self.host),
-                        timeout=30, auth=httpx.DigestAuth(self.username, self.password))
-                if response is not None and response.status_code != 401:                                    
-                    self.endpoint_production_inverters = response
-                else:
-                    response.raise_for_status()
-            except (httpx.RemoteProtocolError):
-                raise
-            except (httpcore.RemoteProtocolError, httpx.RemoteProtocolError):
-                await response.close()
-            except httpx.HTTPError:
-                response.raise_for_status()
+            
+                try:
+                    async with httpx.AsyncClient() as client:
+                        self.endpoint_production_json_results = await client.get(
+                            ENDPOINT_URL_PRODUCTION_JSON.format(self.host), timeout=30, allow_redirects=False)
+                        self.endpoint_production_v1_results = await client.get(
+                            ENDPOINT_URL_PRODUCTION_V1.format(self.host), timeout=30, allow_redirects=False)
+                        self.endpoint_production_results = await client.get(
+                            ENDPOINT_URL_PRODUCTION.format(self.host), timeout=30, allow_redirects=False)
+                except httpx.HTTPError:
+                    pass
+                
+                await self.detect_model()
+                
+                if(self.get_inverters):
+                    for i in range(0,3):
+                        while True:
+                            """If a password was not given as an argument when instantiating
+                            the EnvoyReader object than use the last six numbers of the serial
+                            number as the password.  Otherwise use the password argument value."""
+                            if self.password == "":
+                                if self.serial_number_last_six == "":
+                                    try:
+                                        await self.get_serial_number()
+                                    except httpx.HTTPError:
+                                        raise
+                                    self.password = self.serial_number_last_six
+                            try:
+                                async with httpx.AsyncClient() as client:
+                                    response = await client.get(ENDPOINT_URL_PRODUCTION_INVERTERS.format(self.host),
+                                        timeout=30, auth=httpx.DigestAuth(self.username, self.password))
+                                if response is not None and response.status_code != 401:                                    
+                                    self.endpoint_production_inverters = response
+                                else:
+                                    response.raise_for_status()
+                            except (httpcore.RemoteProtocolError, httpx.RemoteProtocolError) as err:
+                                continue
+                            except httpx.HTTPError:
+                                response.raise_for_status()
+                            break
+                        break
+                if(i == 2):
+                    raise httpx.RemoteProtocolError(message='Malformed request. Failed after 3 retries.', request=None)
 
     async def detect_model(self):
         """Method to determine if the Envoy supports consumption values or
@@ -387,7 +393,7 @@ class EnvoyReader():
         print("Reading...")
         loop = asyncio.get_event_loop()
         dataResults = loop.run_until_complete(asyncio.gather(
-            self.getData(), return_exceptions=True
+            self.getData(), return_exceptions=False
         ))
 
         loop = asyncio.get_event_loop()

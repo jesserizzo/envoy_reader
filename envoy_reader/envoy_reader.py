@@ -374,7 +374,7 @@ class EnvoyReader():
 
         """Only return data if Envoy supports retrieving Inverter data"""
         if self.endpoint_type == "P0":
-            return "Inverter data not available for your Envoy device."
+            return None
 
         response_dict = {}
         try:
@@ -416,6 +416,8 @@ class EnvoyReader():
         print("lifetime_consumption:    {}".format(results[7]))
         if "401" in str(dataResults):
             print("inverters_production:    Unable to retrieve inverter data - Authentication failure")
+        elif results[8] is None:
+            print("inverters_production:    Inverter data not available for your Envoy device.")
         else:
             print("inverters_production:    {}".format(results[8]))
 

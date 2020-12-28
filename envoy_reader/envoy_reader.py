@@ -393,7 +393,7 @@ class EnvoyReader():
         print("Reading...")
         loop = asyncio.get_event_loop()
         dataResults = loop.run_until_complete(asyncio.gather(
-            self.getData(), return_exceptions=False
+            self.getData(), return_exceptions=True
         ))
 
         loop = asyncio.get_event_loop()

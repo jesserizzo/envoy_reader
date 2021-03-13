@@ -56,7 +56,8 @@ class EnvoyReader():
         else:
             return False
 
-    async def getData(self):
+    async def getData(self, getInverters=True):
+        """Default to getting inverter data each read request"""
         try:
             async with httpx.AsyncClient() as client:
                 self.endpoint_production_json_results = await client.get(
@@ -70,7 +71,7 @@ class EnvoyReader():
         
         await self.detect_model()
         
-        if(self.get_inverters):
+        if(self.get_inverters and getInverters):
             for i in range(0,3):
                 while True:
                     """If a password was not given as an argument when instantiating

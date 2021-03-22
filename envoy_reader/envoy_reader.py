@@ -95,7 +95,7 @@ class EnvoyReader():
                     except (httpcore.RemoteProtocolError, httpx.RemoteProtocolError) as err:
                         continue
                     except httpx.HTTPError:
-                        response.raise_for_status()
+                        raise
                     break
                 break
             if(i == 2):

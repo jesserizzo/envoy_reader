@@ -133,8 +133,6 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                         response.raise_for_status()
                 except (httpcore.RemoteProtocolError, httpx.RemoteProtocolError):
                     continue
-                except httpx.HTTPError:
-                    response.raise_for_status()
                 break
             break
         if i == 2:

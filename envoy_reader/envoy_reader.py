@@ -32,6 +32,16 @@ ENVOY_MODEL_C = "P"
 ENVOY_MODEL_LEGACY = "P0"
 
 
+def has_production_and_consumption(json):
+    """Check if json has keys for both production and consumption"""
+    return "production" in json and "consumption" in json
+
+
+def has_metering_setup(json):
+    """Check if Active Count of Production CTs (eim) installed is greater than one"""
+    return json["production"][1]["activeCount"] > 0
+
+
 class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     """Instance of EnvoyReader"""
 
@@ -509,13 +519,3 @@ if __name__ == "__main__":
         TESTREADER = EnvoyReader(HOST, USERNAME, PASSWORD, inverters=True)
 
     TESTREADER.run_in_console()
-
-
-def has_production_and_consumption(json):
-    """Check if json has keys for both production and consumption"""
-    return "production" in json and "consumption" in json
-
-
-def has_metering_setup(json):
-    """Check if Active Count of Production CTs (eim) installed is greater than one"""
-    return json["production"][1]["activeCount"] > 0

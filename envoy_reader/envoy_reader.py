@@ -110,14 +110,21 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     async def _update_endpoint(self, attr, url):
         """Update a property from an endpoint."""
         formatted_url = url.format(self.host)
-        async with self.async_client as client:
-            response = await client.get(
-                formatted_url, timeout=30, allow_redirects=False
-            )
-        setattr(self, attr, response)
-        _LOGGER.debug(
-            "Fetched result from %s: %s: %s", formatted_url, response, response.text
+        response = await self._async_fetch_with_retry(
+            formatted_url, timeout=30, allow_redirects=False
         )
+        setattr(self, attr, response)
+        _LOGGER.debug("Fetched from %s: %s: %s", formatted_url, response, response.text)
+
+    async def _async_fetch_with_retry(self, url, **kwargs):
+        """Retry 3 times to fetch the url if there is a transport error."""
+        for attempt in range(3):
+            try:
+                async with self.async_client as client:
+                    return await client.get(url, **kwargs)
+            except httpx.TransportError:
+                if attempt == 2:
+                    raise
 
     async def getData(self):  # pylint: disable=invalid-name
         """Fetch data from the endpoint."""
@@ -132,30 +139,19 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         inverters_url = ENDPOINT_URL_PRODUCTION_INVERTERS.format(self.host)
         inverters_auth = httpx.DigestAuth(self.username, self.password)
 
-        for i in range(0, 3):
-            try:
-                async with self.async_client as client:
-                    response = await client.get(
-                        inverters_url,
-                        timeout=30,
-                        auth=inverters_auth,
-                    )
-
-                _LOGGER.debug(
-                    "Fetched result from %s: %s: %s",
-                    inverters_url,
-                    response,
-                    response.text,
-                )
-                if response is not None and response.status_code != 401:
-                    self.endpoint_production_inverters = response
-                    return
-                else:
-                    response.raise_for_status()
-            except (httpcore.RemoteProtocolError, httpx.RemoteProtocolError):
-                if i == 2:
-                    raise
-                continue
+        response = await self._async_fetch_with_retry(
+            inverters_url, timeout=30, auth=inverters_auth
+        )
+        _LOGGER.debug(
+            "Fetched from %s: %s: %s",
+            inverters_url,
+            response,
+            response.text,
+        )
+        if response.status_code == 401:
+            response.raise_for_status()
+        self.endpoint_production_inverters = response
+        return
 
     async def detect_model(self):
         """Method to determine if the Envoy supports consumption values or only production."""

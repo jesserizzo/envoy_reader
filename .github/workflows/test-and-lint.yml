@@ -22,7 +22,7 @@ jobs:
         pip install .[test]
     - name: Test with pytest
       run: |
-        pytest envoy_reader/tests/
+        pytest tests/
     - name: Upload codecov
       uses: codecov/codecov-action@v1
 

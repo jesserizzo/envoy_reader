@@ -1,8 +1,9 @@
 """Module to read production and consumption values from an Enphase Envoy on the local network."""
 import asyncio
-from json.decoder import JSONDecodeError
+import logging
 import re
 import time
+from json.decoder import JSONDecodeError
 
 import httpcore
 import httpx
@@ -31,14 +32,16 @@ ENVOY_MODEL_S = "PC"
 ENVOY_MODEL_C = "P"
 ENVOY_MODEL_LEGACY = "P0"
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def has_production_and_consumption(json):
-    """Check if json has keys for both production and consumption"""
+    """Check if json has keys for both production and consumption."""
     return "production" in json and "consumption" in json
 
 
 def has_metering_setup(json):
-    """Check if Active Count of Production CTs (eim) installed is greater than one"""
+    """Check if Active Count of Production CTs (eim) installed is greater than one."""
     return json["production"][1]["activeCount"] > 0
 
 
@@ -56,6 +59,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     def __init__(  # pylint: disable=too-many-arguments
         self, host, username="envoy", password="", inverters=False, async_client=None
     ):
+        """Init the EnvoyReader."""
         self.host = host.lower()
         self.username = username
         self.password = password
@@ -104,12 +108,14 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     async def _update_endpoint(self, attr, url):
         """Update a property from an endpoint."""
         async with self.async_client as client:
+            formatted_url = url.format(self.host)
             setattr(
                 self,
                 attr,
-                await client.get(
-                    url.format(self.host), timeout=30, allow_redirects=False
-                ),
+                await client.get(formatted_url, timeout=30, allow_redirects=False),
+            )
+            _LOGGER.debug(
+                "Fetched result from %s: %s", formatted_url, getattr(self, attr)
             )
 
     async def getData(self):  # pylint: disable=invalid-name
@@ -151,9 +157,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             )
 
     async def detect_model(self):
-        """Method to determine if the Envoy supports consumption values or
-        only production"""
-
+        """Method to determine if the Envoy supports consumption values or only production."""
         try:
             await self._update_from_pc_endpoint()
         except httpx.HTTPError:
@@ -447,8 +451,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         return response_dict
 
     def run_in_console(self):
-        """If running this module directly, print all the values in the
-        console."""
+        """If running this module directly, print all the values in the console."""
         print("Reading...")
         loop = asyncio.get_event_loop()
         data_results = loop.run_until_complete(

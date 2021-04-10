@@ -217,11 +217,10 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
     async def get_full_serial_number(self):
         """Method to get the  Envoy serial number."""
-        async with self.async_client as client:
-            response = await self._async_fetch_with_retry(
-                "http://{}/info.xml".format(self.host),
-                allow_redirects=True,
-            )
+        response = await self._async_fetch_with_retry(
+            "http://{}/info.xml".format(self.host),
+            allow_redirects=True,
+        )
         if not response.text:
             return None
         if "<sn>" in response.text:

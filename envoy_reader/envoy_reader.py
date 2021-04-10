@@ -82,7 +82,9 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         """Update the data."""
         if self.endpoint_type == ENVOY_MODEL_S:
             await self._update_from_pc_endpoint()
-        if self.endpoint_type == ENVOY_MODEL_C:
+        if self.endpoint_type == ENVOY_MODEL_C or (
+            self.endpoint_type == ENVOY_MODEL_S and not self.isMeteringEnabled
+        ):
             await self._update_from_p_endpoint()
         if self.endpoint_type == ENVOY_MODEL_LEGACY:
             await self._update_from_p0_endpoint()
@@ -256,10 +258,8 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         if self.endpoint_type == ENVOY_MODEL_S:
             raw_json = self.endpoint_production_json_results.json()
-            if self.isMeteringEnabled:
-                production = raw_json["production"][1]["wNow"]
-            else:
-                production = raw_json["production"][0]["wNow"]
+            idx = 1 if self.isMeteringEnabled else 0
+            production = raw_json["production"][idx]["wNow"]
         elif self.endpoint_type == ENVOY_MODEL_C:
             raw_json = self.endpoint_production_v1_results.json()
             production = raw_json["wattsNow"]
@@ -300,10 +300,9 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         if self.endpoint_type == ENVOY_MODEL_S and self.isMeteringEnabled:
             raw_json = self.endpoint_production_json_results.json()
             daily_production = raw_json["production"][1]["whToday"]
-        elif self.endpoint_type == ENVOY_MODEL_S and not self.isMeteringEnabled:
-            raw_json = self.endpoint_production_v1_results.json()
-            daily_production = raw_json["wattHoursToday"]
-        elif self.endpoint_type == ENVOY_MODEL_C:
+        elif self.endpoint_type == ENVOY_MODEL_C or (
+            self.endpoint_type == ENVOY_MODEL_S and not self.isMeteringEnabled
+        ):
             raw_json = self.endpoint_production_v1_results.json()
             daily_production = raw_json["wattHoursToday"]
         elif self.endpoint_type == ENVOY_MODEL_LEGACY:
@@ -345,10 +344,9 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         if self.endpoint_type == ENVOY_MODEL_S and self.isMeteringEnabled:
             raw_json = self.endpoint_production_json_results.json()
             seven_days_production = raw_json["production"][1]["whLastSevenDays"]
-        elif self.endpoint_type == ENVOY_MODEL_S and not self.isMeteringEnabled:
-            raw_json = self.endpoint_production_v1_results.json()
-            seven_days_production = raw_json["wattHoursSevenDays"]
-        elif self.endpoint_type == ENVOY_MODEL_C:
+        elif self.endpoint_type == ENVOY_MODEL_C or (
+            self.endpoint_type == ENVOY_MODEL_S and not self.isMeteringEnabled
+        ):
             raw_json = self.endpoint_production_v1_results.json()
             seven_days_production = raw_json["wattHoursSevenDays"]
         elif self.endpoint_type == ENVOY_MODEL_LEGACY:
@@ -390,10 +388,9 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         if self.endpoint_type == ENVOY_MODEL_S and self.isMeteringEnabled:
             raw_json = self.endpoint_production_json_results.json()
             lifetime_production = raw_json["production"][1]["whLifetime"]
-        elif self.endpoint_type == ENVOY_MODEL_S and not self.isMeteringEnabled:
-            raw_json = self.endpoint_production_v1_results.json()
-            lifetime_production = raw_json["wattHoursLifetime"]
-        elif self.endpoint_type == ENVOY_MODEL_C:
+        elif self.endpoint_type == ENVOY_MODEL_C or (
+            self.endpoint_type == ENVOY_MODEL_S and not self.isMeteringEnabled
+        ):
             raw_json = self.endpoint_production_v1_results.json()
             lifetime_production = raw_json["wattHoursLifetime"]
         elif self.endpoint_type == ENVOY_MODEL_LEGACY:

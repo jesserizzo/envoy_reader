@@ -30,7 +30,9 @@ async def test_with_4_2_27_firmware():
         return_value=Response(200, json=_load_json_fixture(version, "production.json"))
     )
     respx.get("/api/v1/production").mock(
-        return_value=Response(200, json=_load_json_fixture(version, "api_v1_production"))
+        return_value=Response(
+            200, json=_load_json_fixture(version, "api_v1_production")
+        )
     )
 
     reader = EnvoyReader("127.0.0.1", inverters=False)
@@ -58,7 +60,9 @@ async def test_with_5_0_49_firmware():
         return_value=Response(200, json=_load_json_fixture(version, "production.json"))
     )
     respx.get("/api/v1/production").mock(
-        return_value=Response(200, json=_load_json_fixture(version, "api_v1_production"))
+        return_value=Response(
+            200, json=_load_json_fixture(version, "api_v1_production")
+        )
     )
     respx.get("/api/v1/production/inverters").mock(
         return_value=Response(
@@ -100,7 +104,9 @@ async def test_with_3_9_36_firmware():
     respx.get("/info.xml").mock(return_value=Response(200, text=""))
     respx.get("/production.json").mock(return_value=Response(404))
     respx.get("/api/v1/production").mock(
-        return_value=Response(200, json=_load_json_fixture(version, "api_v1_production"))
+        return_value=Response(
+            200, json=_load_json_fixture(version, "api_v1_production")
+        )
     )
     respx.get("/api/v1/production/inverters").mock(
         return_value=Response(
@@ -142,7 +148,9 @@ async def test_with_3_17_3_firmware():
     respx.get("/info.xml").mock(return_value=Response(200, text=""))
     respx.get("/production.json").mock(return_value=Response(404))
     respx.get("/api/v1/production").mock(
-        return_value=Response(200, json=_load_json_fixture(version, "api_v1_production"))
+        return_value=Response(
+            200, json=_load_json_fixture(version, "api_v1_production")
+        )
     )
     respx.get("/api/v1/production/inverters").mock(
         return_value=Response(

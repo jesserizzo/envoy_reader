@@ -17,6 +17,7 @@ test_requirements = [
     "pytest>=5.4.3",
     "pytest-cov>=2.9.0",
     "pytest-raises>=0.11",
+    "respx>=0.16.3",
 ]
 
 dev_requirements = [
@@ -34,7 +35,7 @@ dev_requirements = [
     "wheel>=0.34.2",
 ]
 
-requirements = ["httpx >= 0.12.1"]
+requirements = ["httpx>=0.12.1"]
 
 extra_requirements = {
     "setup": setup_requirements,

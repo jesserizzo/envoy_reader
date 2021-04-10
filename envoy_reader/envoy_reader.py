@@ -107,16 +107,15 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
     async def _update_endpoint(self, attr, url):
         """Update a property from an endpoint."""
+        formatted_url = url.format(self.host)
         async with self.async_client as client:
-            formatted_url = url.format(self.host)
-            setattr(
-                self,
-                attr,
-                await client.get(formatted_url, timeout=30, allow_redirects=False),
+            response = await client.get(
+                formatted_url, timeout=30, allow_redirects=False
             )
-            _LOGGER.debug(
-                "Fetched result from %s: %s", formatted_url, getattr(self, attr)
-            )
+        setattr(self, attr, response)
+        _LOGGER.debug(
+            "Fetched result from %s: %s: %s", formatted_url, response, response.text
+        )
 
     async def getData(self):  # pylint: disable=invalid-name
         """Fetch data from the endpoint."""
@@ -439,13 +438,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                         "%Y-%m-%d %H:%M:%S", time.localtime(item["lastReportDate"])
                     ),
                 ]
-        except (
-            JSONDecodeError,
-            KeyError,
-            IndexError,
-            TypeError,
-            AttributeError,
-        ):
+        except (JSONDecodeError, KeyError, IndexError, TypeError, AttributeError):
             return None
 
         return response_dict

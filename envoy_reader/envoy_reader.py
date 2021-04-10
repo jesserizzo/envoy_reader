@@ -127,36 +127,43 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         if not self.get_inverters:
             return
 
+        inverters_url = ENDPOINT_URL_PRODUCTION_INVERTERS.format(self.host)
+        inverters_auth = httpx.DigestAuth(self.username, self.password)
+
         for i in range(0, 3):
-            while True:
-                """If a password was not given as an argument when instantiating
-                the EnvoyReader object than use the last six numbers of the serial
-                number as the password.  Otherwise use the password argument value."""
-                if self.password == "" and not self.serial_number_last_six:
-                    await self.get_serial_number()
-                    self.password = self.serial_number_last_six
-                try:
-                    async with self.async_client as client:
-                        response = await client.get(
-                            ENDPOINT_URL_PRODUCTION_INVERTERS.format(self.host),
-                            timeout=30,
-                            auth=httpx.DigestAuth(self.username, self.password),
-                        )
-                    if response is not None and response.status_code != 401:
-                        self.endpoint_production_inverters = response
-                    else:
-                        response.raise_for_status()
-                except (httpcore.RemoteProtocolError, httpx.RemoteProtocolError):
-                    continue
-                break
-            break
-        if i == 2:
-            raise httpx.RemoteProtocolError(
-                message="Malformed request. Failed after 3 retries.", request=None
-            )
+            try:
+                async with self.async_client as client:
+                    response = await client.get(
+                        inverters_url,
+                        timeout=30,
+                        auth=inverters_auth,
+                    )
+
+                _LOGGER.debug(
+                    "Fetched result from %s: %s: %s",
+                    inverters_url,
+                    response,
+                    response.text,
+                )
+                if response is not None and response.status_code != 401:
+                    self.endpoint_production_inverters = response
+                    return
+                else:
+                    response.raise_for_status()
+            except (httpcore.RemoteProtocolError, httpx.RemoteProtocolError):
+                if i == 2:
+                    raise
+                continue
 
     async def detect_model(self):
         """Method to determine if the Envoy supports consumption values or only production."""
+        # If a password was not given as an argument when instantiating
+        # the EnvoyReader object than use the last six numbers of the serial
+        # number as the password.  Otherwise use the password argument value.
+        if self.password == "" and not self.serial_number_last_six:
+            await self.get_serial_number()
+            self.password = self.serial_number_last_six
+
         try:
             await self._update_from_pc_endpoint()
         except httpx.HTTPError:

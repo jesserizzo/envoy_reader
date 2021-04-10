@@ -110,7 +110,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         """Update a property from an endpoint."""
         formatted_url = url.format(self.host)
         response = await self._async_fetch_with_retry(
-            formatted_url, timeout=30, allow_redirects=False
+            formatted_url, allow_redirects=False
         )
         setattr(self, attr, response)
         _LOGGER.debug("Fetched from %s: %s: %s", formatted_url, response, response.text)
@@ -120,7 +120,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         for attempt in range(3):
             try:
                 async with self.async_client as client:
-                    return await client.get(url, **kwargs)
+                    return await client.get(url, timeout=30, **kwargs)
             except httpx.TransportError:
                 if attempt == 2:
                     raise
@@ -139,7 +139,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         inverters_auth = httpx.DigestAuth(self.username, self.password)
 
         response = await self._async_fetch_with_retry(
-            inverters_url, timeout=30, auth=inverters_auth
+            inverters_url, auth=inverters_auth
         )
         _LOGGER.debug(
             "Fetched from %s: %s: %s",

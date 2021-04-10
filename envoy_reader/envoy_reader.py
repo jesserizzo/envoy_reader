@@ -5,7 +5,6 @@ import re
 import time
 from json.decoder import JSONDecodeError
 
-import httpcore
 import httpx
 
 #

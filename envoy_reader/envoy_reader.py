@@ -175,6 +175,8 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             self.isMeteringEnabled = has_metering_setup(
                 self.endpoint_production_json_results.json()
             )
+            if not self.isMeteringEnabled:
+                await self._update_from_p_endpoint()
             self.endpoint_type = ENVOY_MODEL_S
             return
 
@@ -210,14 +212,14 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     async def get_serial_number(self):
         """Method to get last six digits of Envoy serial number for auth"""
         full_serial = await self.get_full_serial_number()
-        self.serial_number_last_six = full_serial[-6:]
+        if full_serial:
+            self.serial_number_last_six = full_serial[-6:]
 
     async def get_full_serial_number(self):
         """Method to get the  Envoy serial number."""
         async with self.async_client as client:
-            response = await client.get(
+            response = await self._async_fetch_with_retry(
                 "http://{}/info.xml".format(self.host),
-                timeout=30,
                 allow_redirects=True,
             )
         if not response.text:

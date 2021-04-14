@@ -126,7 +126,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                     raise
 
     async def getData(self, getInverters=True):  # pylint: disable=invalid-name
-        """Fetch data from the endpoint and if inverters selected default to fetching inverter data each read request."""
+        """Fetch data from the endpoint and if inverters selected default to fetching inverter data."""
         if not self.endpoint_type:
             await self.detect_model()
         else:

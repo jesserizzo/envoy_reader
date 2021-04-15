@@ -272,7 +272,10 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                         production = float(match.group(1))
             else:
                 raise RuntimeError("No match for production, check REGEX  " + text)
-        return int(production)
+        if(self.endpoint_type == ENVOY_MODEL_S):
+            return float(production)
+        else:
+            return int(production)
 
     async def consumption(self):
         """Running getData() beforehand will set self.enpoint_type and self.isDataRetrieved"""
@@ -287,7 +290,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         raw_json = self.endpoint_production_json_results.json()
         consumption = raw_json["consumption"][0]["wNow"]
-        return int(consumption)
+        return float(consumption)
 
     async def daily_production(self):
         """Running getData() beforehand will set self.enpoint_type and self.isDataRetrieved"""
@@ -316,7 +319,10 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 raise RuntimeError(
                     "No match for Day production, " "check REGEX  " + text
                 )
-        return int(daily_production)
+        if(self.endpoint_type == ENVOY_MODEL_S):
+            return float(daily_production)
+        else:
+            return int(daily_production)
 
     async def daily_consumption(self):
         """Running getData() beforehand will set self.enpoint_type and self.isDataRetrieved"""
@@ -331,7 +337,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         raw_json = self.endpoint_production_json_results.json()
         daily_consumption = raw_json["consumption"][0]["whToday"]
-        return int(daily_consumption)
+        return float(daily_consumption)
 
     async def seven_days_production(self):
         """Running getData() beforehand will set self.enpoint_type and self.isDataRetrieved"""
@@ -360,7 +366,10 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 raise RuntimeError(
                     "No match for 7 Day production, " "check REGEX " + text
                 )
-        return int(seven_days_production)
+        if(self.endpoint_type == ENVOY_MODEL_S):
+            return float(seven_days_production)
+        else:
+            return int(seven_days_production)
 
     async def seven_days_consumption(self):
         """Running getData() beforehand will set self.enpoint_type and self.isDataRetrieved"""
@@ -375,7 +384,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         raw_json = self.endpoint_production_json_results.json()
         seven_days_consumption = raw_json["consumption"][0]["whLastSevenDays"]
-        return int(seven_days_consumption)
+        return float(seven_days_consumption)
 
     async def lifetime_production(self):
         """Running getData() beforehand will set self.enpoint_type and self.isDataRetrieved"""
@@ -404,7 +413,10 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 raise RuntimeError(
                     "No match for Lifetime production, " "check REGEX " + text
                 )
-        return int(lifetime_production)
+        if(self.endpoint_type == ENVOY_MODEL_S):
+            return float(lifetime_production)
+        else:
+            return int(lifetime_production)
 
     async def lifetime_consumption(self):
         """Running getData() beforehand will set self.enpoint_type and self.isDataRetrieved"""
@@ -419,7 +431,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         raw_json = self.endpoint_production_json_results.json()
         lifetime_consumption = raw_json["consumption"][0]["whLifetime"]
-        return int(lifetime_consumption)
+        return float(lifetime_consumption)
 
     async def inverters_production(self):
         """Running getData() beforehand will set self.enpoint_type and self.isDataRetrieved"""

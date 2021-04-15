@@ -3,7 +3,7 @@ name: Documentation
 on:
   push:
     branches:
-      - main # Should this be running?
+      - 'main'
 
 jobs:
   docs:

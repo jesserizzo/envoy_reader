@@ -1,3 +1,6 @@
+[![Build Main](https://github.com/jesserizzo/envoy_reader/actions/workflows/build-main.yml/badge.svg)](https://github.com/jesserizzo/envoy_reader/actions/workflows/build-main.yml)
+[![Latest Release](https://img.shields.io/github/v/release/jesserizzo/envoy_reader)](https://img.shields.io/github/v/release/jesserizzo/envoy_reader)
+
 A program to read from an Enphase Envoy on the local network. Reads electricity production and consumption (if available) for the current moment, current day, the last seven days, and the lifetime of the Envoy.
 Also reads production from individual inverters if supported.
 

@@ -29,7 +29,9 @@ async def test_with_4_2_27_firmware_with_ProdEIMDisabled_ConsEIMDisabled():
     version_and_featureSet = version + "_" + featureSet[0] + "_" + featureSet[1]
     respx.get("/info.xml").mock(return_value=Response(200, text=""))
     respx.get("/production.json").mock(
-        return_value=Response(200, json=_load_json_fixture(version_and_featureSet, "production.json"))
+        return_value=Response(
+            200, json=_load_json_fixture(version_and_featureSet, "production.json")
+        )
     )
     respx.get("/api/v1/production").mock(
         return_value=Response(
@@ -50,6 +52,7 @@ async def test_with_4_2_27_firmware_with_ProdEIMDisabled_ConsEIMDisabled():
     assert await reader.lifetime_production() == 10279087
     assert await reader.inverters_production() is None
 
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_with_4_2_33_firmware_with_ProdEIMDisabled_ConsEIMDisabled():
@@ -59,7 +62,9 @@ async def test_with_4_2_33_firmware_with_ProdEIMDisabled_ConsEIMDisabled():
     version_and_featureSet = version + "_" + featureSet[0] + "_" + featureSet[1]
     respx.get("/info.xml").mock(return_value=Response(200, text=""))
     respx.get("/production.json").mock(
-        return_value=Response(200, json=_load_json_fixture(version_and_featureSet, "production.json"))
+        return_value=Response(
+            200, json=_load_json_fixture(version_and_featureSet, "production.json")
+        )
     )
     respx.get("/api/v1/production").mock(
         return_value=Response(
@@ -80,6 +85,7 @@ async def test_with_4_2_33_firmware_with_ProdEIMDisabled_ConsEIMDisabled():
     assert await reader.lifetime_production() == 53494.573
     assert await reader.inverters_production() is None
 
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_with_5_0_49_firmware_with_no_metering_data():
@@ -90,7 +96,9 @@ async def test_with_5_0_49_firmware_with_no_metering_data():
 
     respx.get("/info.xml").mock(return_value=Response(200, text=""))
     respx.get("/production.json").mock(
-        return_value=Response(200, json=_load_json_fixture(version_and_featureSet, "production.json"))
+        return_value=Response(
+            200, json=_load_json_fixture(version_and_featureSet, "production.json")
+        )
     )
     respx.get("/api/v1/production").mock(
         return_value=Response(
@@ -99,7 +107,10 @@ async def test_with_5_0_49_firmware_with_no_metering_data():
     )
     respx.get("/api/v1/production/inverters").mock(
         return_value=Response(
-            200, json=_load_json_fixture(version_and_featureSet, "api_v1_production_inverters")
+            200,
+            json=_load_json_fixture(
+                version_and_featureSet, "api_v1_production_inverters"
+            ),
         )
     )
     reader = EnvoyReader("127.0.0.1", inverters=True)
@@ -127,6 +138,7 @@ async def test_with_5_0_49_firmware_with_no_metering_data():
     assert await reader.lifetime_production() == 88742152
     assert isinstance(await reader.inverters_production(), dict)
 
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_with_5_0_55_firmware_with_ProdEIMEnabled_ConsEIMDisabled():
@@ -137,7 +149,9 @@ async def test_with_5_0_55_firmware_with_ProdEIMEnabled_ConsEIMDisabled():
 
     respx.get("/info.xml").mock(return_value=Response(200, text=""))
     respx.get("/production.json").mock(
-        return_value=Response(200, json=_load_json_fixture(version_and_featureSet, "production.json"))
+        return_value=Response(
+            200, json=_load_json_fixture(version_and_featureSet, "production.json")
+        )
     )
     respx.get("/api/v1/production").mock(
         return_value=Response(
@@ -146,29 +160,25 @@ async def test_with_5_0_55_firmware_with_ProdEIMEnabled_ConsEIMDisabled():
     )
     respx.get("/api/v1/production/inverters").mock(
         return_value=Response(
-            200, json=_load_json_fixture(version_and_featureSet, "api_v1_production_inverters")
+            200,
+            json=_load_json_fixture(
+                version_and_featureSet, "api_v1_production_inverters"
+            ),
         )
     )
     reader = EnvoyReader("127.0.0.1", inverters=True)
     await reader.getData()
 
-    assert (
-        await reader.consumption() == 1154.178
-    )
+    assert await reader.consumption() == 1154.178
     assert await reader.production() == 4151.795
-    assert (
-        await reader.daily_consumption() == 21717.074
-    )
+    assert await reader.daily_consumption() == 21717.074
     assert await reader.daily_production() == 41401.742
-    assert (
-        await reader.seven_days_consumption() == 426886.074
-    )
+    assert await reader.seven_days_consumption() == 426886.074
     assert await reader.seven_days_production() == 278982.742
-    assert (
-        await reader.lifetime_consumption() == 13960032.074
-    )
+    assert await reader.lifetime_consumption() == 13960032.074
     assert await reader.lifetime_production() == 4079704.742
     assert isinstance(await reader.inverters_production(), dict)
+
 
 @pytest.mark.asyncio
 @respx.mock

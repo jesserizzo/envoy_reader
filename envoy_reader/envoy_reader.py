@@ -54,7 +54,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     message_battery_not_available = (
         "Battery storage data not available for your Envoy device."
     )
-    
+
     message_consumption_not_available = (
         "Consumption data not available for your Envoy device."
     )

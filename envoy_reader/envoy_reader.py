@@ -447,7 +447,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         return response_dict
 
-    async def battery_status(self):
+    async def battery_storage(self):
         """Return battery data from Envoys that support and have batteries installed"""
         if (
             self.endpoint_type == ENVOY_MODEL_LEGACY
@@ -488,7 +488,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 self.lifetime_production(),
                 self.lifetime_consumption(),
                 self.inverters_production(),
-                self.battery_status(),
+                self.battery_storage(),
                 return_exceptions=False,
             )
         )
@@ -511,7 +511,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             )
         else:
             print("inverters_production:    {}".format(results[8]))
-        print("battery:                 {}".format(results[9]))
+        print("battery_storage:         {}".format(results[9]))
 
 
 if __name__ == "__main__":

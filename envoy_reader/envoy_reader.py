@@ -443,6 +443,25 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         return response_dict
 
+    async def battery_status(self):
+        if self.endpoint_type == ENVOY_MODEL_LEGACY:
+            return None
+
+        response_dict = {}
+        try:
+            raw_json = self.endpoint_production_json_results.json()
+            response_dict["type"] = raw_json["storage"][0]["type"]
+            response_dict["activeCount"] = raw_json["storage"][0]["activeCount"]
+            response_dict["readingTime"] = raw_json["storage"][0]["readingTime"]
+            response_dict["wNow"] = raw_json["storage"][0]["wNow"]
+            response_dict["whNow"] = raw_json["storage"][0]["whNow"]
+            response_dict["state"] = raw_json["storage"][0]["state"]
+        except (JSONDecodeError, KeyError, IndexError, TypeError, AttributeError):
+            return None
+
+        print(response_dict)
+        return response_dict
+
     def run_in_console(self):
         """If running this module directly, print all the values in the console."""
         print("Reading...")
@@ -463,7 +482,8 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 self.lifetime_production(),
                 self.lifetime_consumption(),
                 self.inverters_production(),
-                return_exceptions=True,
+                self.battery_status(),
+                return_exceptions=False,
             )
         )
 
@@ -485,6 +505,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             )
         else:
             print("inverters_production:    {}".format(results[8]))
+        print("battery:                 {}".format(results[9]))
 
 
 if __name__ == "__main__":

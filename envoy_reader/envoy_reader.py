@@ -51,6 +51,10 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     # P for production data only (ie. Envoy model C, s/w >= R3.9)
     # PC for production and consumption data (ie. Envoy model S)
 
+    message_battery_not_available = (
+        "Battery storage data not available for your Envoy device."
+    )
+    
     message_consumption_not_available = (
         "Consumption data not available for your Envoy device."
     )
@@ -444,19 +448,26 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         return response_dict
 
     async def battery_status(self):
-        if self.endpoint_type == ENVOY_MODEL_LEGACY:
-            return None
+        if self.endpoint_type == ENVOY_MODEL_LEGACY or self.endpoint_type == ENVOY_MODEL_C:
+            return self.message_battery_not_available
 
         response_dict = {}
         try:
             raw_json = self.endpoint_production_json_results.json()
+        except (JSONDecodeError):
+            return None
+
+        if "storage" not in raw_json.keys():
+            return self.message_battery_not_available
+
+        try:
             response_dict["type"] = raw_json["storage"][0]["type"]
             response_dict["activeCount"] = raw_json["storage"][0]["activeCount"]
             response_dict["readingTime"] = raw_json["storage"][0]["readingTime"]
             response_dict["wNow"] = raw_json["storage"][0]["wNow"]
             response_dict["whNow"] = raw_json["storage"][0]["whNow"]
             response_dict["state"] = raw_json["storage"][0]["state"]
-        except (JSONDecodeError, KeyError, IndexError, TypeError, AttributeError):
+        except (KeyError, IndexError, TypeError, AttributeError):
             return None
 
         return response_dict
@@ -482,7 +493,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 self.lifetime_consumption(),
                 self.inverters_production(),
                 self.battery_status(),
-                return_exceptions=True,
+                return_exceptions=False,
             )
         )
 

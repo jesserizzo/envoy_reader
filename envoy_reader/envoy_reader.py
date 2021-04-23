@@ -459,7 +459,6 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         except (JSONDecodeError, KeyError, IndexError, TypeError, AttributeError):
             return None
 
-        print(response_dict)
         return response_dict
 
     def run_in_console(self):
@@ -483,7 +482,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 self.lifetime_consumption(),
                 self.inverters_production(),
                 self.battery_status(),
-                return_exceptions=False,
+                return_exceptions=True,
             )
         )
 

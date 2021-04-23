@@ -448,6 +448,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         return response_dict
 
     async def battery_status(self):
+        """Return battery data from Envoys that support and have batteries installed"""
         if (
             self.endpoint_type == ENVOY_MODEL_LEGACY
             or self.endpoint_type == ENVOY_MODEL_C
@@ -459,6 +460,9 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         except (JSONDecodeError):
             return None
 
+        """For Envoys that support batteries but do not have them installed the"""
+        """percentFull will not be available in the JSON results. The API will"""
+        """only return battery data if batteries are installed."""
         if "percentFull" not in raw_json["storage"][0].keys():
             return self.message_battery_not_available
 

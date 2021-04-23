@@ -448,7 +448,10 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         return response_dict
 
     async def battery_status(self):
-        if self.endpoint_type == ENVOY_MODEL_LEGACY or self.endpoint_type == ENVOY_MODEL_C:
+        if (
+            self.endpoint_type == ENVOY_MODEL_LEGACY
+            or self.endpoint_type == ENVOY_MODEL_C
+        ):
             return self.message_battery_not_available
 
         response_dict = {}

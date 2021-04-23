@@ -454,26 +454,15 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         ):
             return self.message_battery_not_available
 
-        response_dict = {}
         try:
             raw_json = self.endpoint_production_json_results.json()
         except (JSONDecodeError):
             return None
 
-        if "storage" not in raw_json.keys():
+        if "percentFull" not in raw_json["storage"][0].keys():
             return self.message_battery_not_available
 
-        try:
-            response_dict["type"] = raw_json["storage"][0]["type"]
-            response_dict["activeCount"] = raw_json["storage"][0]["activeCount"]
-            response_dict["readingTime"] = raw_json["storage"][0]["readingTime"]
-            response_dict["wNow"] = raw_json["storage"][0]["wNow"]
-            response_dict["whNow"] = raw_json["storage"][0]["whNow"]
-            response_dict["state"] = raw_json["storage"][0]["state"]
-        except (KeyError, IndexError, TypeError, AttributeError):
-            return None
-
-        return response_dict
+        return raw_json["storage"][0]
 
     def run_in_console(self):
         """If running this module directly, print all the values in the console."""

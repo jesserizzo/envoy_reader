@@ -51,6 +51,10 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     # P for production data only (ie. Envoy model C, s/w >= R3.9)
     # PC for production and consumption data (ie. Envoy model S)
 
+    message_battery_not_available = (
+        "Battery storage data not available for your Envoy device."
+    )
+
     message_consumption_not_available = (
         "Consumption data not available for your Envoy device."
     )
@@ -443,6 +447,27 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         return response_dict
 
+    async def battery_storage(self):
+        """Return battery data from Envoys that support and have batteries installed"""
+        if (
+            self.endpoint_type == ENVOY_MODEL_LEGACY
+            or self.endpoint_type == ENVOY_MODEL_C
+        ):
+            return self.message_battery_not_available
+
+        try:
+            raw_json = self.endpoint_production_json_results.json()
+        except (JSONDecodeError):
+            return None
+
+        """For Envoys that support batteries but do not have them installed the"""
+        """percentFull will not be available in the JSON results. The API will"""
+        """only return battery data if batteries are installed."""
+        if "percentFull" not in raw_json["storage"][0].keys():
+            return self.message_battery_not_available
+
+        return raw_json["storage"][0]
+
     def run_in_console(self):
         """If running this module directly, print all the values in the console."""
         print("Reading...")
@@ -463,6 +488,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 self.lifetime_production(),
                 self.lifetime_consumption(),
                 self.inverters_production(),
+                self.battery_storage(),
                 return_exceptions=True,
             )
         )
@@ -485,6 +511,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             )
         else:
             print("inverters_production:    {}".format(results[8]))
+        print("battery_storage:         {}".format(results[9]))
 
 
 if __name__ == "__main__":

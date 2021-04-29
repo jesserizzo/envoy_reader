@@ -486,7 +486,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             return self.message_enpower_not_available
 
         try:
-            raw_json = self.endpoint_production_json_results.json()
+            raw_json = self.endpoint_home_json_results.json()
         except (JSONDecodeError):
             return None
 

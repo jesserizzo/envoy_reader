@@ -491,7 +491,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             return None
 
         if "enpower" not in raw_json.keys():
-            return self.message_battery_not_available
+            return self.message_enpower_not_available
         
         return raw_json["enpower"]
 

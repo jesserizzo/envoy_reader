@@ -57,7 +57,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/jesserizzo/envoy_reader",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude=["tests','tests.*"]),
     install_requires=requirements,
     setup_requires=setup_requirements,
     test_suite="tests",

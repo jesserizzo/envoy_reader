@@ -4,6 +4,7 @@ import logging
 import re
 import time
 from json.decoder import JSONDecodeError
+from envoy_utils.envoy_utils import EnvoyUtils
 
 import httpx
 
@@ -163,7 +164,6 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         # number as the password.  Otherwise use the password argument value.
         if self.password == "" and not self.serial_number_last_six:
             await self.get_serial_number()
-            self.password = self.serial_number_last_six
 
         try:
             await self._update_from_pc_endpoint()
@@ -217,7 +217,12 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         """Method to get last six digits of Envoy serial number for auth"""
         full_serial = await self.get_full_serial_number()
         if full_serial:
-            self.serial_number_last_six = full_serial[-6:]
+            gen_passwd = EnvoyUtils.get_password(full_serial, self.username)
+            if self.username == "envoy" or self.username != "installer":
+                self.password = self.serial_number_last_six = full_serial[-6:]
+            else:
+                self.password = gen_passwd
+                
 
     async def get_full_serial_number(self):
         """Method to get the  Envoy serial number."""

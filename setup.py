@@ -35,7 +35,7 @@ dev_requirements = [
     "wheel>=0.34.2",
 ]
 
-requirements = ["httpx>=0.12.1"]
+requirements = ["httpx>=0.12.1", "envoy_utils>=0.0.1"]
 
 extra_requirements = {
     "setup": setup_requirements,

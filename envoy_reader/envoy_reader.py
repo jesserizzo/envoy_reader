@@ -222,7 +222,6 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 self.password = self.serial_number_last_six = full_serial[-6:]
             else:
                 self.password = gen_passwd
-                
 
     async def get_full_serial_number(self):
         """Method to get the  Envoy serial number."""

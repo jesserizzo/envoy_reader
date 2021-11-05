@@ -115,7 +115,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         """Update a property from an endpoint."""
         formatted_url = url.format(self.host)
         response = await self._async_fetch_with_retry(
-            formatted_url, allow_redirects=False
+            formatted_url, follow_redirects=False
         )
         setattr(self, attr, response)
         _LOGGER.debug("Fetched from %s: %s: %s", formatted_url, response, response.text)
@@ -227,7 +227,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         """Method to get the  Envoy serial number."""
         response = await self._async_fetch_with_retry(
             "http://{}/info.xml".format(self.host),
-            allow_redirects=True,
+            follow_redirects=True,
         )
         if not response.text:
             return None

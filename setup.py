@@ -56,6 +56,7 @@ setuptools.setup(
     description="A program to read from an Enphase Envoy on the local network",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    license="MIT",
     url="https://github.com/jesserizzo/envoy_reader",
     packages=setuptools.find_packages(),
     install_requires=requirements,

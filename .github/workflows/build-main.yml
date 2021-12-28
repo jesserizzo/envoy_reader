@@ -70,5 +70,5 @@ jobs:
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@master
       with:
-        user: bdraco
+        user: gregtd
         password: ${{ secrets.PYPI_TOKEN }}

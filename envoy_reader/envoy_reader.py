@@ -21,6 +21,7 @@ LIFE_PRODUCTION_REGEX = (
 )
 SERIAL_REGEX = re.compile(r"Envoy\s*Serial\s*Number:\s*([0-9]+)")
 
+ENDPOINT_URL_HOME_JSON = "http://{}/home.json"
 ENDPOINT_URL_PRODUCTION_JSON = "http://{}/production.json"
 ENDPOINT_URL_PRODUCTION_V1 = "http://{}/api/v1/production"
 ENDPOINT_URL_PRODUCTION_INVERTERS = "http://{}/api/v1/production/inverters"
@@ -60,6 +61,10 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         "Consumption data not available for your Envoy device."
     )
 
+    message_enpower_not_available = (
+        "Enpower Smart Switch status is not available for your Envoy device."
+    )
+
     def __init__(  # pylint: disable=too-many-arguments
         self, host, username="envoy", password="", inverters=False, async_client=None
     ):
@@ -70,6 +75,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         self.get_inverters = inverters
         self.endpoint_type = None
         self.serial_number_last_six = None
+        self.endpoint_home_json_results = None
         self.endpoint_production_json_results = None
         self.endpoint_production_v1_results = None
         self.endpoint_production_inverters = None
@@ -97,6 +103,9 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         """Update from PC endpoint."""
         await self._update_endpoint(
             "endpoint_production_json_results", ENDPOINT_URL_PRODUCTION_JSON
+        )
+        await self._update_endpoint(
+            "endpoint_home_json_results", ENDPOINT_URL_HOME_JSON
         )
 
     async def _update_from_p_endpoint(self):
@@ -472,6 +481,24 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         return raw_json["storage"][0]
 
+    async def enpower_status(self):
+        """Return Enpower Smart Swirch data from Envoys that support it."""
+        if (
+            self.endpoint_type == ENVOY_MODEL_LEGACY
+            or self.endpoint_type == ENVOY_MODEL_C
+        ):
+            return self.message_enpower_not_available
+
+        try:
+            raw_json = self.endpoint_home_json_results.json()
+        except (JSONDecodeError):
+            return None
+
+        if "enpower" not in raw_json.keys():
+            return self.message_enpower_not_available
+        
+        return raw_json["enpower"]
+
     def run_in_console(self):
         """If running this module directly, print all the values in the console."""
         print("Reading...")
@@ -493,6 +520,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 self.lifetime_consumption(),
                 self.inverters_production(),
                 self.battery_storage(),
+                self.enpower_status(),
                 return_exceptions=True,
             )
         )
@@ -516,6 +544,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         else:
             print("inverters_production:    {}".format(results[8]))
         print("battery_storage:         {}".format(results[9]))
+        print("enpower_status:          {}".format(results[10]))
 
 
 if __name__ == "__main__":

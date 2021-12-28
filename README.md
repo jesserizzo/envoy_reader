@@ -11,3 +11,6 @@ This reader uses a JSON endpoint on the Envoy gateway:
 - Envoy S: http://envoy/production.json
 
 For older Envoy with software before R3.9, data is collected from html at http://envoy/production
+
+### Known issues
+* Envoy firmware D7.x.x and above are not supported right now due to authentication method changed by Enphase.

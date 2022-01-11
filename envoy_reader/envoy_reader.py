@@ -4,10 +4,14 @@ import logging
 import re
 import time
 import sys, getopt
+import ssl
 from json.decoder import JSONDecodeError
 from envoy_utils.envoy_utils import EnvoyUtils
 
 import httpx
+
+from bs4 import BeautifulSoup
+import jwt
 
 #
 # Legacy parser is only used on ancient firmwares
@@ -27,11 +31,22 @@ ENDPOINT_URL_PRODUCTION_V1 = "http://{}/api/v1/production"
 ENDPOINT_URL_PRODUCTION_INVERTERS = "http://{}/api/v1/production/inverters"
 ENDPOINT_URL_PRODUCTION = "http://{}/production"
 
+ENDPOINT_URL_PRODUCTION_JSON_HTTPS = "https://{}/production.json"
+ENDPOINT_URL_PRODUCTION_V1_HTTPS = "https://{}/api/v1/production"
+ENDPOINT_URL_PRODUCTION_INVERTERS_HTTPS = "https://{}/api/v1/production/inverters"
+ENDPOINT_URL_PRODUCTION_HTTPS = "https://{}/production"
+ENDPOINT_URL_CHECK_JWT = "https://{}/auth/check_jwt"
+
 # pylint: disable=pointless-string-statement
 
 ENVOY_MODEL_S = "PC"
 ENVOY_MODEL_C = "P"
 ENVOY_MODEL_LEGACY = "P0"
+
+LOGIN_URL = "https://entrez.enphaseenergy.com/login"
+TOKEN_URL = "https://entrez.enphaseenergy.com/entrez_tokens"
+TOKEN = ""
+AUTHORIZATION_HEADER = {"Authorization": "Bearer " + TOKEN}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,6 +145,42 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             except httpx.TransportError:
                 if attempt == 2:
                     raise
+
+    async def _async_post(self, url, **kwargs):
+        try:
+            async with self.async_client as client:
+                return await client.post(url, timeout=30, **kwargs)
+        except httpx.TransportError:
+            raise
+
+    async def _getEnphaseToken(
+        self,
+        enphase_user,
+        enphase_passwd,
+        commisioned_token=False,
+        site_id=None,
+        serial_num=None,
+    ):
+        payload_login = {
+            "username": enphase_user,
+            "password": enphase_passwd,
+        }
+
+        # Login to website and store cookie
+        await self._async_fetch_with_retry(LOGIN_URL, data=payload_login)
+
+        if commisioned_token:
+            payload_token = {"Site": site_id, "serialNum": serial_num}
+            response = await self._async_fetch_with_retry(TOKEN_URL, data=payload_token)
+
+            parsed_html = BeautifulSoup(response.text, "lxml")
+            TOKEN = parsed_html.body.find("textarea").text
+
+            await self._async_fetch_with_retry(
+                ENDPOINT_URL_CHECK_JWT, headers=AUTHORIZATION_HEADER, verify=False
+            )
+        else:
+            pass
 
     async def getData(self, getInverters=True):  # pylint: disable=invalid-name
         """Fetch data from the endpoint and if inverters selected default to fetching inverter data."""
@@ -546,7 +597,12 @@ def main(argv):
     else:
         TESTREADER = EnvoyReader(HOST, USERNAME, PASSWORD, inverters=True)
 
-    TESTREADER.run_in_console()
+    try:
+        TESTREADER.run_in_console()
+    except:
+        print(
+            "Envoy appears to be running Firmware 7.x.x or higher. Please use the additional command line arguments to retrieve the required token from Enphase."
+        )
 
 
 if __name__ == "__main__":

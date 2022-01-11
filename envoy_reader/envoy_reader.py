@@ -176,11 +176,23 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             parsed_html = BeautifulSoup(response.text, "lxml")
             TOKEN = parsed_html.body.find("textarea").text
 
-            await self._async_fetch_with_retry(
-                ENDPOINT_URL_CHECK_JWT, headers=AUTHORIZATION_HEADER, verify=False
-            )
         else:
-            pass
+            payload_token = {"uncommissioned": "true", "Site": ""}
+            response = await self._async_fetch_with_retry(TOKEN_URL, data=payload_token)
+            soup = BeautifulSoup(response.text, features="html.parser")
+            TOKEN = soup.find("textarea").contents[0]
+
+        token_validation_html = await self._async_fetch_with_retry(
+            ENDPOINT_URL_CHECK_JWT, headers=AUTHORIZATION_HEADER, verify=False
+        )
+
+        soup = BeautifulSoup(token_validation_html.text, features="html.parser")
+        token_validation = soup.find("h2").contents[0]
+
+        if token_validation == "Valid token.":
+            print("Token is valid")
+        else:
+            print("Invalid token!")
 
     async def getData(self, getInverters=True):  # pylint: disable=invalid-name
         """Fetch data from the endpoint and if inverters selected default to fetching inverter data."""

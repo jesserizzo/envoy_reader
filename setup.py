@@ -35,7 +35,12 @@ dev_requirements = [
     "wheel>=0.34.2",
 ]
 
-requirements = ["httpx>=0.20", "envoy_utils>=0.0.1"]
+requirements = [
+    "httpx>=0.20",
+    "envoy_utils>=0.0.1",
+    "beautifulsoup4>=4.10.0",
+    "jwt>=1.3.1",
+]
 
 extra_requirements = {
     "setup": setup_requirements,

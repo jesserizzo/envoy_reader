@@ -3,6 +3,7 @@ import asyncio
 import logging
 import re
 import time
+import sys, getopt
 from json.decoder import JSONDecodeError
 from envoy_utils.envoy_utils import EnvoyUtils
 
@@ -518,7 +519,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         print("battery_storage:         {}".format(results[9]))
 
 
-if __name__ == "__main__":
+def main(argv):
     HOST = input(
         "Enter the Envoy IP address or host name, "
         + "or press enter to use 'envoy' as default: "
@@ -546,3 +547,7 @@ if __name__ == "__main__":
         TESTREADER = EnvoyReader(HOST, USERNAME, PASSWORD, inverters=True)
 
     TESTREADER.run_in_console()
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

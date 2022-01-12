@@ -78,6 +78,9 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         enlighten_user=None,
         enlighten_pass=None,
         commissioned=False,
+        enlighten_site_id=None,
+        enlighten_serial_num=None,
+        https_flag="",
     ):
         """Init the EnvoyReader."""
         self.host = host.lower()
@@ -95,7 +98,9 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         self.enlighten_user = enlighten_user
         self.enlighten_pass = enlighten_pass
         self.commissioned = commissioned
-        self.https_flag = HTTPS_FLAG
+        self.enlighten_site_id = enlighten_site_id
+        self.enlighten_serial_num = enlighten_serial_num
+        self.https_flag = https_flag
 
     @property
     def async_client(self):
@@ -150,45 +155,49 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 if attempt == 2:
                     raise
 
-    async def _async_post(self, url, **kwargs):
+    async def _async_post(self, url, data, **kwargs):
+        print(f"Data: {data}")
         try:
             async with self.async_client as client:
-                return await client.post(url, timeout=30, **kwargs)
+                r = await client.post(url, data=data, timeout=30, **kwargs)
+                print(f"Resp: {r.text}")
+                print(f"Cookie: {r.cookies}")
+                return r
         except httpx.TransportError:  # pylint: disable=try-except-raise
             raise
 
-    async def _getEnphaseToken(  # pylint: disable=too-many-arguments, invalid-name
+    async def _getEnphaseToken(  # pylint: disable=invalid-name
         self,
-        enphase_user,
-        enphase_passwd,
-        commisioned_token=False,
-        site_id=None,
-        serial_num=None,
     ):
         payload_login = {
-            "username": enphase_user,
-            "password": enphase_passwd,
+            "username": self.enlighten_user,
+            "password": self.enlighten_pass,
         }
 
         # Login to website and store cookie
-        await self._async_fetch_with_retry(LOGIN_URL, data=payload_login)
+        await self._async_post(LOGIN_URL, data=payload_login)
 
-        if commisioned_token:
-            payload_token = {"Site": site_id, "serialNum": serial_num}
-            response = await self._async_fetch_with_retry(TOKEN_URL, data=payload_token)
+        if self.commissioned == "True":
+            payload_token = {
+                "Site": self.enlighten_site_id,
+                "serialNum": self.enlighten_serial_num,
+            }
+            response = await self._async_post(TOKEN_URL, data=payload_token)
 
             parsed_html = BeautifulSoup(response.text, "lxml")
             TOKEN = parsed_html.body.find(  # pylint: disable=invalid-name, unused-variable, redefined-outer-name
                 "textarea"
             ).text
+            print(f"Commissioned Token: {TOKEN}")
 
         else:
             payload_token = {"uncommissioned": "true", "Site": ""}
-            response = await self._async_fetch_with_retry(TOKEN_URL, data=payload_token)
+            response = await self._async_post(TOKEN_URL, data=payload_token)
             soup = BeautifulSoup(response.text, features="html.parser")
             TOKEN = soup.find("textarea").contents[0]  # pylint: disable=invalid-name
+            print(f"Uncommissioned Token: {TOKEN}")
 
-        token_validation_html = await self._async_fetch_with_retry(
+        token_validation_html = await self._async_post(
             ENDPOINT_URL_CHECK_JWT, headers=AUTHORIZATION_HEADER, verify=False
         )
 
@@ -203,6 +212,9 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     async def getData(self, getInverters=True):  # pylint: disable=invalid-name
         """Fetch data from the endpoint and if inverters selected default"""
         """to fetching inverter data."""
+
+        if self.https_flag == "s":
+            await self._getEnphaseToken()
 
         if not self.endpoint_type:
             await self.detect_model()
@@ -564,7 +576,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         print("Reading...")
         loop = asyncio.get_event_loop()
         data_results = loop.run_until_complete(
-            asyncio.gather(self.getData(), return_exceptions=True)
+            asyncio.gather(self.getData(), return_exceptions=False)
         )
 
         loop = asyncio.get_event_loop()
@@ -580,7 +592,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 self.lifetime_consumption(),
                 self.inverters_production(),
                 self.battery_storage(),
-                return_exceptions=True,
+                return_exceptions=False,
             )
         )
 
@@ -606,7 +618,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
 
 if __name__ == "__main__":
-    HTTPS_FLAG = ""
+    secure = ""
 
     parser = argparse.ArgumentParser(
         description="Retrieve energy information from the Enphase Envoy device."
@@ -623,6 +635,18 @@ if __name__ == "__main__":
         dest="commissioned",
         help="Commissioned Envoy (True/False)",
     )
+    parser.add_argument(
+        "-i",
+        "--siteid",
+        dest="enlighten_site_id",
+        help="Enlighten Site ID. Only used when Commissioned=True.",
+    )
+    parser.add_argument(
+        "-s",
+        "--serialnum",
+        dest="enlighten_serial_num",
+        help="Enlighten Envoy Serial Numbewr. Only used when Commissioned=True.",
+    )
     args = parser.parse_args()
 
     if (
@@ -630,7 +654,7 @@ if __name__ == "__main__":
         and args.enlighten_pass is not None
         and args.commissioned is not None
     ):
-        HTTPS_FLAG = "s"
+        secure = "s"
 
     HOST = input(
         "Enter the Envoy IP address or host name, "
@@ -661,6 +685,9 @@ if __name__ == "__main__":
             enlighten_user=args.enlighten_user,
             enlighten_pass=args.enlighten_pass,
             commissioned=args.commissioned,
+            enlighten_site_id=args.enlighten_site_id,
+            enlighten_serial_num=args.enlighten_serial_num,
+            https_flag=secure,
         )
     else:
         TESTREADER = EnvoyReader(
@@ -671,6 +698,9 @@ if __name__ == "__main__":
             enlighten_user=args.enlighten_user,
             enlighten_pass=args.enlighten_pass,
             commissioned=args.commissioned,
+            enlighten_site_id=args.enlighten_site_id,
+            enlighten_serial_num=args.enlighten_serial_num,
+            https_flag=secure,
         )
 
     TESTREADER.run_in_console()

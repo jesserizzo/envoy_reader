@@ -7,6 +7,7 @@ import time
 from json.decoder import JSONDecodeError
 
 import httpx
+import requests
 from bs4 import BeautifulSoup
 from envoy_utils.envoy_utils import EnvoyUtils
 
@@ -155,11 +156,13 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 if attempt == 2:
                     raise
 
-    async def _async_post(self, url, data, **kwargs):
+    async def _async_post(self, url, data, cookies=None, **kwargs):
         print(f"Data: {data}")
         try:
             async with self.async_client as client:
-                r = await client.post(url, data=data, timeout=30, **kwargs)
+                r = await client.post(
+                    url, cookies=cookies, data=data, timeout=30, **kwargs
+                )
                 print(f"Resp: {r.text}")
                 print(f"Cookie: {r.cookies}")
                 return r
@@ -175,14 +178,19 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         }
 
         # Login to website and store cookie
-        await self._async_post(LOGIN_URL, data=payload_login)
+        resp = await self._async_post(LOGIN_URL, data=payload_login)
+        cookies = requests.utils.cookiejar_from_dict(
+            requests.utils.dict_from_cookiejar(resp.cookies)
+        )
 
         if self.commissioned == "True":
             payload_token = {
                 "Site": self.enlighten_site_id,
                 "serialNum": self.enlighten_serial_num,
             }
-            response = await self._async_post(TOKEN_URL, data=payload_token)
+            response = await self._async_post(
+                TOKEN_URL, data=payload_token, cookies=cookies
+            )
 
             parsed_html = BeautifulSoup(response.text, "lxml")
             TOKEN = parsed_html.body.find(  # pylint: disable=invalid-name, unused-variable, redefined-outer-name

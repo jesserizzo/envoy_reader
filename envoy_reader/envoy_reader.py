@@ -40,6 +40,7 @@ TOKEN_URL = "https://entrez.enphaseenergy.com/entrez_tokens"
 TOKEN = ""
 AUTHORIZATION_HEADER = {"Authorization": "Bearer " + TOKEN}
 
+logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -143,27 +144,30 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             formatted_url, follow_redirects=False
         )
         setattr(self, attr, response)
-        _LOGGER.debug("Fetched from %s: %s: %s", formatted_url, response, response.text)
 
     async def _async_fetch_with_retry(self, url, **kwargs):
         """Retry 3 times to fetch the url if there is a transport error."""
         for attempt in range(3):
+            _LOGGER.debug("HTTP GET Attempt #%s: %s", attempt + 1, url)
             try:
                 async with self.async_client as client:
-                    return await client.get(url, timeout=30, **kwargs)
+                    resp = await client.get(url, timeout=30, **kwargs)
+                    _LOGGER.debug("Fetched from %s: %s: %s", url, resp, resp.text)
+                    return resp
             except httpx.TransportError:
                 if attempt == 2:
                     raise
 
     async def _async_post(self, url, data, cookies=None, **kwargs):
-        print(f"Data: {data}")
+        _LOGGER.debug("HTTP POST Attempt: %s", url)
+        _LOGGER.debug("HTTP POST Data: %s", data)
         try:
             async with self.async_client as client:
                 resp = await client.post(
                     url, cookies=cookies, data=data, timeout=30, **kwargs
                 )
-                print(f"Resp: {resp.text}")
-                print(f"Cookie: {resp.cookies}")
+                _LOGGER.debug("HTTP POST %s: %s: %s", url, resp, resp.text)
+                _LOGGER.debug("HTTP POST Cookie: %s", resp.cookies)
                 return resp
         except httpx.TransportError:  # pylint: disable=try-except-raise
             raise
@@ -192,7 +196,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             TOKEN = parsed_html.body.find(  # pylint: disable=invalid-name, unused-variable, redefined-outer-name
                 "textarea"
             ).text
-            print(f"Commissioned Token: {TOKEN}")
+            _LOGGER.debug("Commissioned Token: %s", TOKEN)
 
         else:
             payload_token = {"uncommissioned": "true", "Site": ""}
@@ -201,7 +205,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             )
             soup = BeautifulSoup(response.text, features="html.parser")
             TOKEN = soup.find("textarea").contents[0]  # pylint: disable=invalid-name
-            print(f"Uncommissioned Token: {TOKEN}")
+            _LOGGER.debug("Uncommissioned Token: %s", TOKEN)
 
         token_validation_html = await self._async_fetch_with_retry(
             ENDPOINT_URL_CHECK_JWT.format(self.host), headers=AUTHORIZATION_HEADER

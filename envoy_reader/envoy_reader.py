@@ -179,9 +179,6 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         # Login to website and store cookie
         resp = await self._async_post(LOGIN_URL, data=payload_login)
-        cookies = requests.utils.cookiejar_from_dict(
-            requests.utils.dict_from_cookiejar(resp.cookies)
-        )
 
         if self.commissioned == "True":
             payload_token = {
@@ -189,7 +186,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 "serialNum": self.enlighten_serial_num,
             }
             response = await self._async_post(
-                TOKEN_URL, data=payload_token, cookies=cookies
+                TOKEN_URL, data=payload_token, cookies=resp.cookies
             )
 
             parsed_html = BeautifulSoup(response.text, "lxml")
@@ -200,7 +197,9 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         else:
             payload_token = {"uncommissioned": "true", "Site": ""}
-            response = await self._async_post(TOKEN_URL, data=payload_token)
+            response = await self._async_post(
+                TOKEN_URL, data=payload_token, cookies=resp.cookies
+            )
             soup = BeautifulSoup(response.text, features="html.parser")
             TOKEN = soup.find("textarea").contents[0]  # pylint: disable=invalid-name
             print(f"Uncommissioned Token: {TOKEN}")

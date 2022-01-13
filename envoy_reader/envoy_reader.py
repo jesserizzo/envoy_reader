@@ -7,7 +7,6 @@ import time
 from json.decoder import JSONDecodeError
 
 import httpx
-import requests
 from bs4 import BeautifulSoup
 from envoy_utils.envoy_utils import EnvoyUtils
 
@@ -106,7 +105,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     @property
     def async_client(self):
         """Return the httpx client."""
-        return self._async_client or httpx.AsyncClient()
+        return self._async_client or httpx.AsyncClient(verify=False)
 
     async def _update(self):
         """Update the data."""
@@ -160,12 +159,12 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         print(f"Data: {data}")
         try:
             async with self.async_client as client:
-                r = await client.post(
+                resp = await client.post(
                     url, cookies=cookies, data=data, timeout=30, **kwargs
                 )
-                print(f"Resp: {r.text}")
-                print(f"Cookie: {r.cookies}")
-                return r
+                print(f"Resp: {resp.text}")
+                print(f"Cookie: {resp.cookies}")
+                return resp
         except httpx.TransportError:  # pylint: disable=try-except-raise
             raise
 
@@ -204,8 +203,8 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             TOKEN = soup.find("textarea").contents[0]  # pylint: disable=invalid-name
             print(f"Uncommissioned Token: {TOKEN}")
 
-        token_validation_html = await self._async_post(
-            ENDPOINT_URL_CHECK_JWT, headers=AUTHORIZATION_HEADER, verify=False
+        token_validation_html = await self._async_fetch_with_retry(
+            ENDPOINT_URL_CHECK_JWT.format(self.host), headers=AUTHORIZATION_HEADER
         )
 
         soup = BeautifulSoup(token_validation_html.text, features="html.parser")
@@ -625,7 +624,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
 
 if __name__ == "__main__":
-    secure = ""
+    SECURE = ""
 
     parser = argparse.ArgumentParser(
         description="Retrieve energy information from the Enphase Envoy device."
@@ -661,7 +660,7 @@ if __name__ == "__main__":
         and args.enlighten_pass is not None
         and args.commissioned is not None
     ):
-        secure = "s"
+        SECURE = "s"
 
     HOST = input(
         "Enter the Envoy IP address or host name, "
@@ -694,7 +693,7 @@ if __name__ == "__main__":
             commissioned=args.commissioned,
             enlighten_site_id=args.enlighten_site_id,
             enlighten_serial_num=args.enlighten_serial_num,
-            https_flag=secure,
+            https_flag=SECURE,
         )
     else:
         TESTREADER = EnvoyReader(
@@ -707,7 +706,7 @@ if __name__ == "__main__":
             commissioned=args.commissioned,
             enlighten_site_id=args.enlighten_site_id,
             enlighten_serial_num=args.enlighten_serial_num,
-            https_flag=secure,
+            https_flag=SECURE,
         )
 
     TESTREADER.run_in_console()

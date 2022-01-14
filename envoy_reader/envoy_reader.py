@@ -148,10 +148,12 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     async def _async_fetch_with_retry(self, url, **kwargs):
         """Retry 3 times to fetch the url if there is a transport error."""
         for attempt in range(3):
-            _LOGGER.debug("HTTP GET Attempt #%s: %s: Header:%s", attempt + 1, url, self._authorization_header)
+            _LOGGER.debug("HTTP GET Attempt #%s: %s: Header:%s", attempt + 1,
+                url, self._authorization_header)
             try:
                 async with self.async_client as client:
-                    resp = await client.get(url, headers=self._authorization_header, timeout=30, **kwargs)
+                    resp = await client.get(url, headers=self._authorization_header,
+                        timeout=30, **kwargs)
                     _LOGGER.debug("Fetched from %s: %s: %s", url, resp, resp.text)
                     return resp
             except httpx.TransportError:

@@ -141,17 +141,17 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         """Update a property from an endpoint."""
         formatted_url = url.format(self.https_flag, self.host)
         response = await self._async_fetch_with_retry(
-            formatted_url, follow_redirects=False, headers=self._authorization_header
+            formatted_url, follow_redirects=False
         )
         setattr(self, attr, response)
 
     async def _async_fetch_with_retry(self, url, **kwargs):
         """Retry 3 times to fetch the url if there is a transport error."""
         for attempt in range(3):
-            _LOGGER.debug("HTTP GET Attempt #%s: %s", attempt + 1, url)
+            _LOGGER.debug("HTTP GET Attempt #%s: %s: Header:%s", attempt + 1, url, self._authorization_header)
             try:
                 async with self.async_client as client:
-                    resp = await client.get(url, timeout=30, **kwargs)
+                    resp = await client.get(url, headers=self._authorization_header, timeout=30, **kwargs)
                     _LOGGER.debug("Fetched from %s: %s: %s", url, resp, resp.text)
                     return resp
             except httpx.TransportError:
@@ -209,7 +209,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         self._authorization_header = {"Authorization": "Bearer " + TOKEN}
         token_validation_html = await self._async_fetch_with_retry(
-            ENDPOINT_URL_CHECK_JWT.format(self.host), headers=self._authorization_header
+            ENDPOINT_URL_CHECK_JWT.format(self.host)
         )
 
         soup = BeautifulSoup(token_validation_html.text, features="html.parser")

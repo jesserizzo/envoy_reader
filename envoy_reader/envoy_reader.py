@@ -38,7 +38,6 @@ ENVOY_MODEL_LEGACY = "P0"
 LOGIN_URL = "https://entrez.enphaseenergy.com/login"
 TOKEN_URL = "https://entrez.enphaseenergy.com/entrez_tokens"
 TOKEN = ""
-AUTHORIZATION_HEADER = {"Authorization": "Bearer " + TOKEN}
 
 logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
@@ -96,6 +95,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         self.endpoint_production_results = None
         self.isMeteringEnabled = False  # pylint: disable=invalid-name
         self._async_client = async_client
+        self._authorization_header = None
         self.enlighten_user = enlighten_user
         self.enlighten_pass = enlighten_pass
         self.commissioned = commissioned
@@ -141,7 +141,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         """Update a property from an endpoint."""
         formatted_url = url.format(self.https_flag, self.host)
         response = await self._async_fetch_with_retry(
-            formatted_url, follow_redirects=False
+            formatted_url, follow_redirects=False, headers=self._authorization_header
         )
         setattr(self, attr, response)
 
@@ -207,8 +207,9 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             TOKEN = soup.find("textarea").contents[0]  # pylint: disable=invalid-name
             _LOGGER.debug("Uncommissioned Token: %s", TOKEN)
 
+        self._authorization_header = {"Authorization": "Bearer " + TOKEN}
         token_validation_html = await self._async_fetch_with_retry(
-            ENDPOINT_URL_CHECK_JWT.format(self.host), headers=AUTHORIZATION_HEADER
+            ENDPOINT_URL_CHECK_JWT.format(self.host), headers=self._authorization_header
         )
 
         soup = BeautifulSoup(token_validation_html.text, features="html.parser")

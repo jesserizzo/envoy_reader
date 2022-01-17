@@ -41,6 +41,7 @@ LOGIN_URL = "https://entrez.enphaseenergy.com/login"
 TOKEN_URL = "https://entrez.enphaseenergy.com/entrez_tokens"
 TOKEN = ""
 
+logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
 
 

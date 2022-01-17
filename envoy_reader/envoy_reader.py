@@ -1,7 +1,9 @@
 """Module to read production and consumption values from an Enphase Envoy on the local network."""
 import argparse
 import asyncio
+import datetime
 import logging
+import jwt
 import re
 import time
 from json.decoder import JSONDecodeError
@@ -148,12 +150,17 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     async def _async_fetch_with_retry(self, url, **kwargs):
         """Retry 3 times to fetch the url if there is a transport error."""
         for attempt in range(3):
-            _LOGGER.debug("HTTP GET Attempt #%s: %s: Header:%s", attempt + 1,
-                url, self._authorization_header)
+            _LOGGER.debug(
+                "HTTP GET Attempt #%s: %s: Header:%s",
+                attempt + 1,
+                url,
+                self._authorization_header,
+            )
             try:
                 async with self.async_client as client:
-                    resp = await client.get(url, headers=self._authorization_header,
-                        timeout=30, **kwargs)
+                    resp = await client.get(
+                        url, headers=self._authorization_header, timeout=30, **kwargs
+                    )
                     _LOGGER.debug("Fetched from %s: %s: %s", url, resp, resp.text)
                     return resp
             except httpx.TransportError:
@@ -194,7 +201,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 TOKEN_URL, data=payload_token, cookies=resp.cookies
             )
 
-            parsed_html = BeautifulSoup(response.text, "lxml")
+            parsed_html = BeautifulSoup(response.text, features="html.parser")
             TOKEN = parsed_html.body.find(  # pylint: disable=invalid-name, unused-variable, redefined-outer-name
                 "textarea"
             ).text
@@ -209,25 +216,60 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             TOKEN = soup.find("textarea").contents[0]  # pylint: disable=invalid-name
             _LOGGER.debug("Uncommissioned Token: %s", TOKEN)
 
+        # Create HTTP Header
         self._authorization_header = {"Authorization": "Bearer " + TOKEN}
+
+        # Fetch the Enphase Token status from the local Envoy
         token_validation_html = await self._async_fetch_with_retry(
             ENDPOINT_URL_CHECK_JWT.format(self.host)
         )
 
+        # Parse the HTML return from Envoy and check the text
         soup = BeautifulSoup(token_validation_html.text, features="html.parser")
         token_validation = soup.find("h2").contents[0]
+        self._is_enphase_token_valid(token_validation)
 
-        if token_validation == "Valid token.":
-            print("Token is valid")
+    def _is_enphase_token_valid(self, response):
+        if response == "Valid token.":
+            _LOGGER.debug("Token is valid")
+            return True
         else:
-            print("Invalid token!")
+            _LOGGER.debug("Invalid token!")
+            return False
+
+    def _is_enphase_token_expired(self, token):
+        decode = jwt.decode(
+            token, options={"verify_signature": False}, algorithms="ES256"
+        )
+        exp_epoch = decode["exp"]
+        exp_time = datetime.datetime.fromtimestamp(exp_epoch)
+        if datetime.datetime.now() < exp_time:
+            _LOGGER.debug("Token expires at: %s", exp_time)
+            return False
+        else:
+            _LOGGER.debug("Token expired on: %s", exp_time)
+            return True
+
+    async def check_connection(self):
+        """Check if the Envoy is reachable. Also check if HTTP or"""
+        """HTTPS is needed."""
+        resp = await self._async_fetch_with_retry(
+            ENDPOINT_URL_PRODUCTION_V1.format(self.host)
+        )
+        _LOGGER.debug("Check connection HTTP Code: %s", resp.status_code)
 
     async def getData(self, getInverters=True):  # pylint: disable=invalid-name
         """Fetch data from the endpoint and if inverters selected default"""
         """to fetching inverter data."""
 
+        # Check if the Secure flag is set
         if self.https_flag == "s":
-            await self._getEnphaseToken()
+            # Check if a token has already been retrieved
+            if TOKEN == "":
+                await self._getEnphaseToken()
+            else:
+                if self._is_enphase_token_expired(TOKEN):
+                    await self._getEnphaseToken()
 
         if not self.endpoint_type:
             await self.detect_model()

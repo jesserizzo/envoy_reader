@@ -1,2 +1,0 @@
-requests_async >= 0.6.0
-httpx >= 0.20

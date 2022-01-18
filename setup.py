@@ -35,7 +35,12 @@ dev_requirements = [
     "wheel>=0.34.2",
 ]
 
-requirements = ["httpx>=0.20", "envoy_utils>=0.0.1"]
+requirements = [
+    "httpx>=0.20",
+    "envoy-utils>=0.0.1",
+    "beautifulsoup4>=4.10.0",
+    "pyjwt==2.1.0",
+]
 
 extra_requirements = {
     "setup": setup_requirements,
@@ -50,7 +55,7 @@ extra_requirements = {
 
 setuptools.setup(
     name="envoy_reader",
-    version="0.20.2",
+    version="0.21.0",
     author="Jesse Rizzo",
     author_email="jesse.rizzo@gmail.com",
     description="A program to read from an Enphase Envoy on the local network",

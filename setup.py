@@ -55,7 +55,7 @@ extra_requirements = {
 
 setuptools.setup(
     name="envoy_reader",
-    version="0.21.0",
+    version="0.21.1",
     author="Jesse Rizzo",
     author_email="jesse.rizzo@gmail.com",
     description="A program to read from an Enphase Envoy on the local network",

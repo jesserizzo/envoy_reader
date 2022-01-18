@@ -258,7 +258,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         )
         _LOGGER.debug("Check connection HTTP Code: %s", resp.status_code)
         if resp.status_code == 200:
-            raise resp.raise_for_status()
+            resp.raise_for_status()
 
     async def getData(self, getInverters=True):  # pylint: disable=invalid-name
         """Fetch data from the endpoint and if inverters selected default"""

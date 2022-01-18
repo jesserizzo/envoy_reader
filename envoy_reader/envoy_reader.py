@@ -54,6 +54,10 @@ def has_metering_setup(json):
     return json["production"][1]["activeCount"] > 0
 
 
+class SwitchToHTTPS(Exception):
+    pass
+
+
 class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     """Instance of EnvoyReader"""
 
@@ -258,7 +262,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         )
         _LOGGER.debug("Check connection HTTP Code: %s", resp.status_code)
         if resp.status_code == 401:
-            resp.raise_for_status()
+            raise SwitchToHTTPS
 
     async def getData(self, getInverters=True):  # pylint: disable=invalid-name
         """Fetch data from the endpoint and if inverters selected default"""

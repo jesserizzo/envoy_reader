@@ -252,6 +252,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
     async def check_connection(self):
         """Check if the Envoy is reachable. Also check if HTTP or"""
         """HTTPS is needed."""
+        _LOGGER.debug("Checking Host: %s", self.host)
         resp = await self._async_fetch_with_retry(
             ENDPOINT_URL_PRODUCTION_V1.format(self.host)
         )

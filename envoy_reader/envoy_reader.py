@@ -227,6 +227,8 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             ENDPOINT_URL_CHECK_JWT.format(self.host)
         )
 
+        _LOGGER.debug("JWT response: %s", token_validation_html.text)
+
         # Parse the HTML return from Envoy and check the text
         soup = BeautifulSoup(token_validation_html.text, features="html.parser")
         token_validation = soup.find("h2").contents[0]

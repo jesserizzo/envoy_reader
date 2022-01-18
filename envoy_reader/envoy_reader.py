@@ -195,7 +195,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         # Login to website and store cookie
         resp = await self._async_post(LOGIN_URL, data=payload_login)
 
-        if self.commissioned == "True":
+        if self.commissioned == "True" or self.commissioned == "Commissioned":
             payload_token = {
                 "Site": self.enlighten_site_id,
                 "serialNum": self.enlighten_serial_num,
@@ -261,7 +261,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             ENDPOINT_URL_PRODUCTION_V1.format(self.https_flag, self.host)
         )
         _LOGGER.debug("Check connection HTTP Code: %s", resp.status_code)
-        if resp.status_code == 401:
+        if resp.status_code == 301:
             raise SwitchToHTTPS
 
     async def getData(self, getInverters=True):  # pylint: disable=invalid-name

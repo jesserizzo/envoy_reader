@@ -254,7 +254,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         """HTTPS is needed."""
         _LOGGER.debug("Checking Host: %s", self.host)
         resp = await self._async_fetch_with_retry(
-            ENDPOINT_URL_PRODUCTION_V1.format(self.host)
+            ENDPOINT_URL_PRODUCTION_V1.format(self.https_flag, self.host)
         )
         _LOGGER.debug("Check connection HTTP Code: %s", resp.status_code)
 

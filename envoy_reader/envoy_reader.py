@@ -172,7 +172,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
     async def _async_post(self, url, data, cookies=None, **kwargs):
         _LOGGER.debug("HTTP POST Attempt: %s", url)
-        _LOGGER.debug("HTTP POST Data: %s", data)
+        # _LOGGER.debug("HTTP POST Data: %s", data)
         try:
             async with self.async_client as client:
                 resp = await client.post(
@@ -270,11 +270,15 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         # Check if the Secure flag is set
         if self.https_flag == "s":
+            _LOGGER.debug("Checking Token value: %s", TOKEN)
             # Check if a token has already been retrieved
             if TOKEN == "":
+                _LOGGER.debug("Found empty token: %s", TOKEN)
                 await self._getEnphaseToken()
             else:
+                _LOGGER.debug("Token is populated: %s", TOKEN)
                 if self._is_enphase_token_expired(TOKEN):
+                    _LOGGER.debug("Found Expired token - Retrieving new token")
                     await self._getEnphaseToken()
 
         if not self.endpoint_type:

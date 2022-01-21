@@ -106,6 +106,7 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         self.enlighten_site_id = enlighten_site_id
         self.enlighten_serial_num = enlighten_serial_num
         self.https_flag = https_flag
+        self._token = ""
 
     @property
     def async_client(self):
@@ -204,10 +205,10 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
             )
 
             parsed_html = BeautifulSoup(response.text, features="html.parser")
-            TOKEN = parsed_html.body.find(  # pylint: disable=invalid-name, unused-variable, redefined-outer-name
+            self._token = parsed_html.body.find(  # pylint: disable=invalid-name, unused-variable, redefined-outer-name
                 "textarea"
             ).text
-            _LOGGER.debug("Commissioned Token: %s", TOKEN)
+            _LOGGER.debug("Commissioned Token: %s", self._token)
 
         else:
             payload_token = {"uncommissioned": "true", "Site": ""}
@@ -215,11 +216,13 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                 TOKEN_URL, data=payload_token, cookies=resp.cookies
             )
             soup = BeautifulSoup(response.text, features="html.parser")
-            TOKEN = soup.find("textarea").contents[0]  # pylint: disable=invalid-name
-            _LOGGER.debug("Uncommissioned Token: %s", TOKEN)
+            self._token = soup.find("textarea").contents[
+                0
+            ]  # pylint: disable=invalid-name
+            _LOGGER.debug("Uncommissioned Token: %s", self._token)
 
         # Create HTTP Header
-        self._authorization_header = {"Authorization": "Bearer " + TOKEN}
+        self._authorization_header = {"Authorization": "Bearer " + self._token}
 
         # Fetch the Enphase Token status from the local Envoy
         token_validation_html = await self._async_fetch_with_retry(
@@ -269,14 +272,14 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
 
         # Check if the Secure flag is set
         if self.https_flag == "s":
-            _LOGGER.debug("Checking Token value: %s", TOKEN)
+            _LOGGER.debug("Checking Token value: %s", self._token)
             # Check if a token has already been retrieved
-            if TOKEN == "":
-                _LOGGER.debug("Found empty token: %s", TOKEN)
+            if self._token == "":
+                _LOGGER.debug("Found empty token: %s", self._token)
                 await self._getEnphaseToken()
             else:
-                _LOGGER.debug("Token is populated: %s", TOKEN)
-                if self._is_enphase_token_expired(TOKEN):
+                _LOGGER.debug("Token is populated: %s", self._token)
+                if self._is_enphase_token_expired(self._token):
                     _LOGGER.debug("Found Expired token - Retrieving new token")
                     await self._getEnphaseToken()
 

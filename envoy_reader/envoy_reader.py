@@ -39,7 +39,6 @@ ENVOY_MODEL_LEGACY = "P0"
 
 LOGIN_URL = "https://entrez.enphaseenergy.com/login"
 TOKEN_URL = "https://entrez.enphaseenergy.com/entrez_tokens"
-TOKEN = ""
 
 _LOGGER = logging.getLogger(__name__)
 

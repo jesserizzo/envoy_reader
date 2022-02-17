@@ -164,6 +164,13 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
                     resp = await client.get(
                         url, headers=self._authorization_header, timeout=30, **kwargs
                     )
+                    if resp.status_code == 401 and attempt < 2:               
+                        _LOGGER.debug(
+                            "Received 401 from Envoy; refreshing token, attempt %s of 2",
+                            attempt+1,
+                            )                               
+                        await self._getEnphaseToken()       
+                        continue  
                     _LOGGER.debug("Fetched from %s: %s: %s", url, resp, resp.text)
                     return resp
             except httpx.TransportError:

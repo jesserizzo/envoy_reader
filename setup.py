@@ -39,7 +39,7 @@ requirements = [
     "httpx>=0.20",
     "envoy-utils>=0.0.1",
     "beautifulsoup4>=4.10.0",
-    "pyjwt==2.1.0",
+    "pyjwt>=2.7.0",
 ]
 
 extra_requirements = {
